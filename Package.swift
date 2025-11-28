@@ -4,27 +4,84 @@
 import PackageDescription
 
 let package = Package(
-    name: "ModuleFramework",
+    name: "PageKit",
     platforms: [
-        .iOS(.v16) // Required for NavigationPath in NavigationCoordinator
+        .iOS(.v16)
     ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
+        // Core page system with coordination and navigation
+        .library(
+            name: "PageKit",
+            targets: ["PageKit"]
+        ),
+        // Protocol-based theming system
+        .library(
+            name: "PageKitTheming",
+            targets: ["PageKitTheming"]
+        ),
+        // UI components (buttons, icons, text) - requires theming
+        .library(
+            name: "PageKitUI",
+            targets: ["PageKitUI"]
+        ),
+        // Form handling system - requires core
+        .library(
+            name: "PageKitForms",
+            targets: ["PageKitForms"]
+        ),
+        // Legacy support - includes all packages
         .library(
             name: "ModuleFramework",
             targets: ["ModuleFramework"]
         ),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
+        // Core page system - standalone, no dependencies
+        .target(
+            name: "PageKit",
+            dependencies: [],
+            path: "Sources/PageKit"
+        ),
+        // Theming system - standalone, no dependencies
+        .target(
+            name: "PageKitTheming",
+            dependencies: [],
+            path: "Sources/PageKitTheming"
+        ),
+        // UI components - depends on theming
+        .target(
+            name: "PageKitUI",
+            dependencies: ["PageKitTheming"],
+            path: "Sources/PageKitUI"
+        ),
+        // Form system - depends on core
+        .target(
+            name: "PageKitForms",
+            dependencies: ["PageKit"],
+            path: "Sources/PageKitForms"
+        ),
+        // Legacy module - combines all for backwards compatibility
         .target(
             name: "ModuleFramework",
-            dependencies: []
+            dependencies: ["PageKit", "PageKitTheming", "PageKitUI", "PageKitForms"],
+            path: "Sources/ModuleFramework"
+        ),
+        // Tests
+        .testTarget(
+            name: "PageKitTests",
+            dependencies: ["PageKit"]
         ),
         .testTarget(
-            name: "ModuleFrameworkTests",
-            dependencies: ["ModuleFramework"]
+            name: "PageKitThemingTests",
+            dependencies: ["PageKitTheming"]
+        ),
+        .testTarget(
+            name: "PageKitUITests",
+            dependencies: ["PageKitUI", "PageKitTheming"]
+        ),
+        .testTarget(
+            name: "PageKitFormsTests",
+            dependencies: ["PageKitForms", "PageKit"]
         ),
     ]
 )
