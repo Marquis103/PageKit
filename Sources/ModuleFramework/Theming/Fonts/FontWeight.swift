@@ -7,7 +7,7 @@
 import Foundation
 import UIKit
 
-enum FontWeight {
+public enum FontWeight {
 	case light
 	case medium
 	case semiBold
@@ -15,7 +15,7 @@ enum FontWeight {
 	case extraBold
 	case black
 
-	var uiFontWeight: UIFont.Weight {
+	public var uiFontWeight: UIFont.Weight {
 		switch self {
 			case .light: .light
 			case .medium: .medium

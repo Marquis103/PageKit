@@ -6,7 +6,8 @@
 
 import Foundation
 
-enum TextSize {
+/// Defines standard text size options with theme integration
+public enum TextSize {
 	case xxsmall
 	case xsmall
 	case small
@@ -17,7 +18,10 @@ enum TextSize {
 	case hero
 	case custom(CGFloat)
 
-	func resolve(from theme: Theme) -> CGFloat {
+	/// Resolves the text size to a CGFloat value using the theme's sizing configuration
+	/// - Parameter theme: The current theme containing size definitions
+	/// - Returns: The resolved text size in points
+	public func resolve(from theme: Theme) -> CGFloat {
 		switch self {
 			case .xxsmall: theme.sizing.text.xxsmall
 			case .xsmall: theme.sizing.text.xsmall

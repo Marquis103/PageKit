@@ -6,7 +6,7 @@
 
 import Foundation
 
-enum IconSize {
+public enum IconSize {
 	case xsmall
 	case small
 	case medium
@@ -14,7 +14,7 @@ enum IconSize {
 	case xlarge
 	case custom(CGFloat)
 
-	func resolve(from theme: Theme) -> CGFloat {
+	public func resolve(from theme: Theme) -> CGFloat {
 		switch self {
 			case .xsmall: theme.sizing.icons.xsmall
 			case .small: theme.sizing.icons.small

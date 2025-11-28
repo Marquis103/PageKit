@@ -7,4 +7,4 @@
 import Foundation
 import SwiftUI
 
-typealias FontFamily = (FontWeight) -> Font
+public typealias FontFamily = (FontWeight) -> Font
