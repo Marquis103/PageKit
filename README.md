@@ -337,4 +337,4 @@ This framework was extracted from a larger application and has been cleaned to r
 
 ## License
 
-Copyright © 2025 theCut, Inc. All rights reserved.
+Copyright © 2025 PageKit, Inc. All rights reserved.

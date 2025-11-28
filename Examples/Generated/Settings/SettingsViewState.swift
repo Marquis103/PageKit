@@ -1,15 +1,9 @@
 //
 //  SettingsViewState.swift
 //
-//  Copyright © 2025 theCut, Inc. All rights reserved.
+//  Copyright © 2025 PageKit. All rights reserved.
 //
 
-import SwiftUI
-import ModuleFramework
+import PageKit
 
-class SettingsViewState: ModuleViewState {
-    // Add @Published properties here
-    // Example:
-    // @Published var title: String = ""
-    // @Published var isLoading: Bool = false
-}
+final class SettingsViewState: PageViewState { }
