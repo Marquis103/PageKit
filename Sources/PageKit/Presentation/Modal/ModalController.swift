@@ -17,11 +17,11 @@ public protocol ModalDismissable {
 // MARK: - ModalController
 
 public final class ModalController<P: Page>: PageHostController<P>, ModalDismissable {
-	private var modalPresenter: ModalPresenter<P.Content>?
+	private var modalPresenter: ModalPresenter<P.View>?
 
 	override public func setupView() {
 		let modalPresenter = ModalPresenter {
-			pageContent
+			pageView
 		}
 
 		let hostingController = UIHostingController(

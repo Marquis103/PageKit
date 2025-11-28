@@ -14,10 +14,10 @@ public protocol Page {
 
 	associatedtype ViewModel: PageViewModel<Self>
 	associatedtype ViewState: PageViewState
-	associatedtype Content: PageContent
+	associatedtype View: PageView
 
 	var coordinator: Coordinating { get }
 	var viewModel: ViewModel { get }
 	var viewState: ViewState { get }
-	var content: Content { get }
+	var view: View { get }
 }

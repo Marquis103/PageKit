@@ -1,14 +1,14 @@
 //
-//  PageContent.swift
+//  PageView.swift
 //
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
 import SwiftUI
 
-// MARK: - PageContent
+// MARK: - PageView
 
-public protocol PageContent: View {
+public protocol PageView: View {
 	associatedtype State: PageViewState
 	associatedtype Event = Void
 

@@ -11,7 +11,7 @@ import PageKitForms
 final class LoginViewModel: FormViewModel<LoginForm> {
 	override func onStart() async { }
 
-	override func handle(event: LoginContent.Event) async { }
+	override func handle(event: LoginFormView.Event) async { }
 	override func submit() async throws {
 		// Implement form submission
 	}

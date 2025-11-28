@@ -15,12 +15,12 @@ final class LoginForm: FormPage {
 	let coordinator: Coordinating
 	let viewState: LoginViewState
 	let viewModel: LoginViewModel
-	let content: LoginContent
+	let view: LoginFormView
 
 	init(coordinator: Coordinating) {
 		self.coordinator = coordinator
 		self.viewState = LoginViewState()
 		self.viewModel = LoginViewModel(coordinator: coordinator, viewState: viewState)
-		self.content = LoginContent(viewState: viewState, handler: FormEventHandler(viewModel))
+		self.view = LoginFormView(viewState: viewState, handler: FormEventHandler(viewModel))
 	}
 }

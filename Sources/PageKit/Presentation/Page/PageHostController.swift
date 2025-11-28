@@ -13,7 +13,7 @@ import UIKit
 public class PageHostController<P: Page>: UIViewController, PageController {
 	public let pageViewModel: P.ViewModel
 	public let pageViewState: P.ViewState
-	public let pageContent: P.Content
+	public let pageView: P.View
 
 	public let mode: PageMode
 	public let rewinder: Rewinder
@@ -29,7 +29,7 @@ public class PageHostController<P: Page>: UIViewController, PageController {
 	public init(page: P, mode: PageMode = .normal, rewinder: Rewinder) {
 		pageViewModel = page.viewModel
 		pageViewState = page.viewState
-		pageContent = page.content
+		pageView = page.view
 
 		self.mode = mode
 		self.rewinder = rewinder
@@ -80,7 +80,7 @@ public class PageHostController<P: Page>: UIViewController, PageController {
 			UIHostingController(
 				rootView: PageContentWrapper {
 					PagePresenter(mode: mode) {
-						pageContent
+						pageView
 					}
 				}
 				.environment(\.rewinder, rewinder)

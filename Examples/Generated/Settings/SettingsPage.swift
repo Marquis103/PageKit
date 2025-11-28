@@ -14,12 +14,12 @@ final class SettingsPage: Page {
 	let coordinator: Coordinating
 	let viewState: SettingsViewState
 	let viewModel: SettingsViewModel
-	let content: SettingsContent
+	let view: SettingsView
 
 	init(coordinator: Coordinating) {
 		self.coordinator = coordinator
 		self.viewState = SettingsViewState()
 		self.viewModel = SettingsViewModel(coordinator: coordinator, viewState: viewState)
-		self.content = SettingsContent(viewState: viewState, handler: PageEventHandler(viewModel))
+		self.view = SettingsView(viewState: viewState, handler: PageEventHandler(viewModel))
 	}
 }

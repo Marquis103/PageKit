@@ -62,7 +62,7 @@ open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 	}
 
 	// TODO: Make this async
-	open func handle(event _: P.Content.Event) {
+	open func handle(event _: P.View.Event) {
 		// Override
 	}
 

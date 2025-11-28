@@ -10,5 +10,5 @@ import PageKit
 final class SettingsViewModel: PageViewModel<SettingsPage> {
 	override func onStart() async { }
 
-	override func handle(event: SettingsContent.Event) async { }
+	override func handle(event: SettingsView.Event) async { }
 }

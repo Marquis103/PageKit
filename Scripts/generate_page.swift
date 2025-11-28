@@ -42,10 +42,10 @@ enum PageType {
 		}
 	}
 
-	var baseContentProtocol: String {
+	var baseViewProtocol: String {
 		switch self {
-		case .standard: "PageContent"
-		case .form: "FormContent"
+		case .standard: "PageView"
+		case .form: "FormView"
 		}
 	}
 
@@ -77,10 +77,24 @@ enum PageType {
 		}
 	}
 
-	var contentImports: String {
+	var viewImports: String {
 		switch self {
 		case .standard: "import SwiftUI\nimport PageKit"
 		case .form: "import SwiftUI\nimport PageKit\nimport PageKitForms"
+		}
+	}
+
+	func viewTypeName(for baseName: String) -> String {
+		switch self {
+		case .standard: "\(baseName)View"
+		case .form: "\(baseName)FormView"
+		}
+	}
+
+	func viewFileName(for baseName: String) -> String {
+		switch self {
+		case .standard: "\(baseName)View.swift"
+		case .form: "\(baseName)FormView.swift"
 		}
 	}
 }
@@ -99,11 +113,10 @@ if CommandLine.arguments.contains("-h") || CommandLine.arguments.contains("--hel
 		Examples:
 		  swift Scripts/generate_page.swift Search        → SearchPage
 		  swift Scripts/generate_page.swift Login --form  → LoginForm
-		  swift Scripts/generate_page.swift Settings      → SettingsPage
 
 		Generated Files:
-		  Standard: {Name}Page.swift, {Name}ViewModel.swift, {Name}ViewState.swift, {Name}Content.swift
-		  Form:     {Name}Form.swift, {Name}ViewModel.swift, {Name}ViewState.swift, {Name}Content.swift
+		  Standard: {Name}Page.swift, {Name}ViewModel.swift, {Name}ViewState.swift, {Name}View.swift
+		  Form:     {Name}Form.swift, {Name}ViewModel.swift, {Name}ViewState.swift, {Name}FormView.swift
 		"""
 	)
 	exit(0)
@@ -135,6 +148,7 @@ let pageType: PageType = isForm ? .form : .standard
 // MARK: - Generate File Contents
 
 let pageFileName = "\(name)\(pageType.pageSuffix)"
+let viewTypeName = pageType.viewTypeName(for: name)
 
 let pageFileContent = """
 //
@@ -153,13 +167,13 @@ final class \(pageFileName): \(pageType.basePageProtocol) {
 	let coordinator: Coordinating
 	let viewState: \(name)ViewState
 	let viewModel: \(name)ViewModel
-	let content: \(name)Content
+	let view: \(viewTypeName)
 
 	init(coordinator: Coordinating) {
 		self.coordinator = coordinator
 		self.viewState = \(name)ViewState()
 		self.viewModel = \(name)ViewModel(coordinator: coordinator, viewState: viewState)
-		self.content = \(name)Content(viewState: viewState, handler: \(pageType.eventHandlerType)(viewModel))
+		self.view = \(viewTypeName)(viewState: viewState, handler: \(pageType.eventHandlerType)(viewModel))
 	}
 }
 """
@@ -184,7 +198,7 @@ let viewModelFileContent = """
 final class \(name)ViewModel: \(pageType.baseViewModelType)<\(pageFileName)> {
 	override func onStart() async { }
 
-	override func handle(event: \(name)Content.Event) async { }\(submitMethod)
+	override func handle(event: \(viewTypeName).Event) async { }\(submitMethod)
 }
 """
 
@@ -208,16 +222,16 @@ Form {
 Text("Hello from \(name)!")
 """
 
-let contentFileContent = """
+let viewFileContent = """
 //
-//  \(name)Content.swift
+//  \(viewTypeName).swift
 //
 //  Copyright © 2025 PageKit. All rights reserved.
 //
 
-\(pageType.contentImports)
+\(pageType.viewImports)
 
-struct \(name)Content: \(pageType.baseContentProtocol) {
+struct \(viewTypeName): \(pageType.baseViewProtocol) {
 	enum Event { }
 
 	@ObservedObject var viewState: \(name)ViewState
@@ -233,7 +247,7 @@ let fileContents = [
 	"\(pageFileName).swift": pageFileContent,
 	"\(name)ViewModel.swift": viewModelFileContent,
 	"\(name)ViewState.swift": viewStateFileContent,
-	"\(name)Content.swift": contentFileContent
+	pageType.viewFileName(for: name): viewFileContent
 ]
 
 // MARK: - Write Files
