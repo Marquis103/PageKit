@@ -1,16 +1,17 @@
-# ModuleFramework
+# PageKit
 
-A Swift Package providing a modular architecture framework for iOS applications, featuring a coordinator-based navigation pattern and a module composition system.
+A Swift Package providing a modular architecture framework for iOS applications, featuring a coordinator-based navigation pattern and a page composition system.
 
 ## Overview
 
-ModuleFramework provides the foundational components for building modular iOS applications with:
+PageKit provides the foundational components for building modular iOS applications with:
 
-- **Coordinator Pattern**: UIKit-based navigation management
-- **Module System**: Protocol-oriented feature composition
-- **SwiftUI Integration**: Modern UI components with backward compatibility
+- **Coordinator Pattern**: UIKit-based navigation management with full lifecycle support
+- **Page System**: Protocol-oriented feature composition (Page + View + ViewModel + ViewState)
+- **SwiftUI Integration**: Modern UI components with UIKit navigation backbone
 - **Property Wrappers**: Reactive state management helpers
 - **Themeable UI**: Environment-based theming system
+- **Forms**: Built-in form handling with validation and submission
 
 ## Requirements
 
@@ -22,7 +23,7 @@ ModuleFramework provides the foundational components for building modular iOS ap
 
 ### Swift Package Manager
 
-Add ModuleFramework to your project using Xcode:
+Add PageKit to your project using Xcode:
 
 1. File > Add Package Dependencies
 2. Enter the repository URL
@@ -32,309 +33,643 @@ Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "your-repo-url", from: "1.0.0")
+    .package(url: "https://github.com/your-org/PageKit", from: "1.0.0")
 ]
 ```
 
-## Core Concepts
-
-### Module
-
-A `Module` represents a self-contained feature with its own view, state, and business logic:
+Then import the packages you need:
 
 ```swift
-protocol Module {
-    associatedtype View: SwiftUI.View
-    associatedtype ViewModel: ModuleViewModel
-    associatedtype ViewState: ModuleViewState
+import PageKit        // Core framework
+import PageKitForms   // Form handling
+import PageKitTheming // Theming system
+import PageKitUI      // UI components
+```
 
-    var view: View { get }
+---
+
+## Architecture
+
+### System Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         AppCoordinator                          │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │  SettingsPage   │  │    LoginForm    │  │   ProfilePage   │ │
+│  │  ┌───────────┐  │  │  ┌───────────┐  │  │  ┌───────────┐  │ │
+│  │  │   View    │  │  │  │   View    │  │  │  │   View    │  │ │
+│  │  └─────┬─────┘  │  │  └─────┬─────┘  │  │  └─────┬─────┘  │ │
+│  │        │        │  │        │        │  │        │        │ │
+│  │  ┌─────▼─────┐  │  │  ┌─────▼─────┐  │  │  ┌─────▼─────┐  │ │
+│  │  │ ViewModel │  │  │  │ ViewModel │  │  │  │ ViewModel │  │ │
+│  │  └─────┬─────┘  │  │  └─────┬─────┘  │  │  └─────┬─────┘  │ │
+│  │        │        │  │        │        │  │        │        │ │
+│  │  ┌─────▼─────┐  │  │  ┌─────▼─────┐  │  │  ┌─────▼─────┐  │ │
+│  │  │ ViewState │  │  │  │ ViewState │  │  │  │ ViewState │  │ │
+│  │  └───────────┘  │  │  └───────────┘  │  │  └───────────┘  │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Data Flow
+
+```
+┌──────────────┐     events      ┌──────────────┐    mutations    ┌──────────────┐
+│              │ ───────────────▶│              │ ───────────────▶│              │
+│   PageView   │                 │ PageViewModel│                 │ PageViewState│
+│              │◀─────────────── │              │◀─────────────── │              │
+└──────────────┘  @ObservedObject└──────────────┘    @Published   └──────────────┘
+       │                                │
+       │         PageEventHandler       │
+       └────────────────────────────────┘
+```
+
+- **PageView** observes ViewState for UI updates
+- **PageView** sends events to ViewModel via PageEventHandler
+- **PageViewModel** mutates ViewState in response to events
+- **PageViewModel** coordinates navigation actions via Coordinator
+
+### Navigation Flow
+
+```
+                    ┌───────────────────┐
+                    │   Coordinator     │
+                    │                   │
+                    │  coordinate(      │
+                    │    action:        │◀──────────────────┐
+                    │  )                │                   │
+                    └─────────┬─────────┘                   │
+                              │                             │
+                    ┌─────────▼─────────┐                   │
+                    │                   │                   │
+                    │  navigate(        │                   │
+                    │    to: VC,        │                   │
+                    │    with: action   │                   │
+                    │  )                │                   │
+                    └─────────┬─────────┘                   │
+                              │                             │
+              ┌───────────────┼───────────────┐             │
+              │               │               │             │
+              ▼               ▼               ▼             │
+        ┌──────────┐   ┌──────────┐   ┌──────────┐         │
+        │  .push   │   │ .present │   │  .modal  │         │
+        └──────────┘   └──────────┘   └──────────┘         │
+                              │                             │
+                    ┌─────────▼─────────┐                   │
+                    │                   │                   │
+                    │ PageHostController│                   │
+                    │  ┌─────────────┐  │                   │
+                    │  │    Page     │  │                   │
+                    │  │ ┌─────────┐ │  │                   │
+                    │  │ │ViewModel├─┼──┼───────────────────┘
+                    │  │ └─────────┘ │  │   coordinate(action:)
+                    │  └─────────────┘  │
+                    └───────────────────┘
+```
+
+### Page Composition
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                         Page                            │
+│                                                         │
+│  init(coordinator: Coordinating)                        │
+│    │                                                    │
+│    ├──▶ viewState = ViewState()                         │
+│    │                                                    │
+│    ├──▶ viewModel = ViewModel(                          │
+│    │        coordinator: coordinator,                   │
+│    │        viewState: viewState                        │
+│    │    )                                               │
+│    │                                                    │
+│    └──▶ view = View(                                    │
+│             viewState: viewState,                       │
+│             handler: PageEventHandler(viewModel)        │
+│         )                                               │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Quick Start
+
+### 1. Generate a Page
+
+Use the included generator script:
+
+```bash
+# Standard page
+swift Scripts/generate_page.swift Settings
+
+# Form page
+swift Scripts/generate_page.swift Login --form
+```
+
+This creates 4 files:
+- `SettingsPage.swift` - Page class
+- `SettingsViewModel.swift` - Business logic
+- `SettingsViewState.swift` - Observable state
+- `SettingsView.swift` - SwiftUI view
+
+### 2. Create a Coordinator
+
+```swift
+import PageKit
+
+final class AppCoordinator: Coordinator {
+    override func start(with action: NavigationAction) {
+        showSettings()
+    }
+
+    func showSettings() {
+        let page = SettingsPage(coordinator: self)
+        let controller = PageHostController(
+            page: page,
+            mode: .normal,
+            rewinder: Rewinder(rewindStyle: .chevron) { [weak self] in
+                self?.rewind()
+            }
+        )
+        navigate(to: controller, with: .push(rewindStyle: .chevron))
+    }
+
+    override func coordinate(action: CoordinatableAction) {
+        switch action {
+        case SettingsPage.Action.editProfile:
+            showProfile()
+        default:
+            break
+        }
+    }
+}
+```
+
+### 3. Start from SceneDelegate
+
+```swift
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+    var coordinator: AppCoordinator?
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options: UIScene.ConnectionOptions) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+
+        let navigationController = UINavigationController()
+        navigationController.setNavigationBarHidden(true, animated: false)
+
+        window = UIWindow(windowScene: windowScene)
+        window?.rootViewController = navigationController
+        window?.makeKeyAndVisible()
+
+        coordinator = AppCoordinator(rootViewController: navigationController)
+        coordinator?.start(with: .none)
+    }
+}
+```
+
+---
+
+## Core Concepts
+
+### Page
+
+A `Page` represents a self-contained feature with its own view, state, and business logic:
+
+```swift
+public protocol Page {
+    associatedtype Action: CoordinatableAction
+    associatedtype Signal = Void
+    associatedtype ViewModel: PageViewModel<Self>
+    associatedtype ViewState: PageViewState
+    associatedtype View: PageView
+
+    var coordinator: Coordinating { get }
     var viewModel: ViewModel { get }
     var viewState: ViewState { get }
+    var view: View { get }
+}
+```
+
+Example implementation:
+
+```swift
+final class SettingsPage: Page {
+    enum Action: CoordinatableAction {
+        case editProfile
+        case logout
+    }
+
+    let coordinator: Coordinating
+    let viewState: SettingsViewState
+    let viewModel: SettingsViewModel
+    let view: SettingsView
+
+    init(coordinator: Coordinating) {
+        self.coordinator = coordinator
+        self.viewState = SettingsViewState()
+        self.viewModel = SettingsViewModel(coordinator: coordinator, viewState: viewState)
+        self.view = SettingsView(viewState: viewState, handler: PageEventHandler(viewModel))
+    }
+}
+```
+
+### PageView
+
+A SwiftUI view that conforms to `PageView`:
+
+```swift
+public protocol PageView: View {
+    associatedtype State: PageViewState
+    associatedtype Event = Void
+
+    var viewState: State { get }
+}
+```
+
+Example:
+
+```swift
+struct SettingsView: PageView {
+    enum Event {
+        case editProfileTapped
+        case logoutTapped
+    }
+
+    @ObservedObject var viewState: SettingsViewState
+    let handler: PageEventHandler<Event>
+
+    var body: some View {
+        List {
+            Button("Edit Profile") {
+                handler(.editProfileTapped)
+            }
+
+            Button("Logout") {
+                handler(.logoutTapped)
+            }
+        }
+    }
+}
+```
+
+### PageViewModel
+
+Handles business logic and lifecycle events:
+
+```swift
+open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
+    public let viewState: P.ViewState
+
+    // Lifecycle methods
+    open func onStart() async { }
+    open func onResume() async { }
+    open func onPause() async { }
+    open func onEnd() { }
+
+    // Event handling
+    open func handle(event: P.View.Event) { }
+
+    // Navigation
+    public func coordinate(action: P.Action) { }
+}
+```
+
+Example:
+
+```swift
+@MainActor
+final class SettingsViewModel: PageViewModel<SettingsPage> {
+    override func onStart() async {
+        await loadSettings()
+    }
+
+    override func handle(event: SettingsView.Event) async {
+        switch event {
+        case .editProfileTapped:
+            coordinate(action: .editProfile)
+        case .logoutTapped:
+            coordinate(action: .logout)
+        }
+    }
+
+    private func loadSettings() async {
+        viewState.isLoading = true
+        // Load settings...
+        viewState.isLoading = false
+    }
+}
+```
+
+### PageViewState
+
+Observable state for the view:
+
+```swift
+open class PageViewState: ObservableObject {
+    @Published public var isLoading: Bool = false
+    @Published public var error: Error?
+}
+```
+
+Example:
+
+```swift
+final class SettingsViewState: PageViewState {
+    @Published var username: String = ""
+    @Published var notificationsEnabled: Bool = true
 }
 ```
 
 ### Coordinator
 
-Coordinators manage navigation flow and handle child coordinator lifecycle:
+Manages navigation flow and child coordinators:
 
 ```swift
-class MyCoordinator: Coordinator {
-    func start() {
-        let module = MyModule()
-        push(module: module)
+open class Coordinator: NSObject, Coordinating {
+    // Navigation
+    public func navigate(to viewController: UIViewController, with action: NavigationAction)
+    public func rewind(animated: Bool = true)
+
+    // Child coordinators
+    public func startCoordinator<T: Coordinator>(_ coordinator: T, withAction action: NavigationAction) -> T
+
+    // Signals
+    public func send(signal: PageSignal)
+
+    // Lifecycle
+    open func start(with action: NavigationAction)
+    open func willStart()
+    open func didStart()
+    open func willEnd()
+    open func didEnd()
+}
+```
+
+---
+
+## Navigation
+
+### Navigation Actions
+
+| Action | Description | Example |
+|--------|-------------|---------|
+| `.push(rewindStyle:)` | Push onto navigation stack | Standard drill-down |
+| `.present(rewindStyle:, transition:)` | Full-screen modal | Login flow |
+| `.modal` | Bottom sheet modal | Action sheet |
+| `.system` | System presentation style | Share sheet |
+| `.window` | Window-level presentation | Onboarding |
+| `.none` | No presentation | Initial setup |
+
+### Rewind Styles
+
+| Style | Button |
+|-------|--------|
+| `.chevron` | `<` back arrow |
+| `.cancel` | "Cancel" text |
+| `.x` | X mark |
+| `.none` | No back button |
+
+### Example Navigation
+
+```swift
+final class ProfileCoordinator: Coordinator {
+    override func start(with action: NavigationAction) {
+        let page = ProfilePage(coordinator: self)
+        let controller = PageHostController(page: page, rewinder: makeRewinder())
+        navigate(to: controller, with: action)
+    }
+
+    override func coordinate(action: CoordinatableAction) {
+        switch action {
+        case ProfilePage.Action.showSettings:
+            let coordinator = SettingsCoordinator(rootViewController: activeViewController)
+            startCoordinator(coordinator, withAction: .push(rewindStyle: .chevron))
+
+        case ProfilePage.Action.showImagePicker:
+            let picker = UIImagePickerController()
+            navigate(to: picker, with: .modal)
+        }
+    }
+
+    private func makeRewinder() -> Rewinder {
+        Rewinder(rewindStyle: .chevron) { [weak self] in
+            self?.rewind()
+        }
     }
 }
 ```
 
-Navigation actions:
-- `push`: Push onto navigation stack
-- `present`: Modal presentation
-- `modal`: Bottom sheet modal
-- `system`: System-level presentation
-- `handoff`: Transfer to another coordinator
+---
 
-### Module Lifecycle
+## Forms
 
-ViewModels can respond to lifecycle events:
+PageKitForms provides form-specific protocols:
+
+### FormPage
 
 ```swift
-class MyViewModel: ModuleViewModel {
-    func onStart() {
-        // Called when module first appears
-    }
+public protocol FormPage: Page where ViewState: FormViewState, ViewModel: FormViewModel<Self> { }
+```
 
-    func onResume() {
-        // Called when returning to module
-    }
+### FormViewState
 
-    func onPause() {
-        // Called when navigating away
-    }
+```swift
+open class FormViewState: PageViewState {
+    @Published public var isSubmitting: Bool = false
+    @Published public var formError: Error?
+    @Published public var fieldErrors: [String: String] = [:]
+    @Published public var isDirty: Bool = false
 
-    func onEnd() {
-        // Called on deallocation
-    }
+    open func validate() -> Bool
 }
 ```
 
-### State Management
-
-#### ExternalizedState
-
-Share state across view hierarchy:
+### FormViewModel
 
 ```swift
-struct ParentView: View {
-    @ExternalizedState var counter = 0
+open class FormViewModel<P: Page>: PageViewModel<P> where P.ViewState: FormViewState {
+    open func submit() async throws
+    public func handleSubmit() async
+}
+```
+
+### Example Form
+
+```swift
+// Page
+final class LoginForm: FormPage {
+    enum Action: CoordinatableAction {
+        case loginSuccess
+    }
+
+    let coordinator: Coordinating
+    let viewState: LoginViewState
+    let viewModel: LoginViewModel
+    let view: LoginFormView
+
+    init(coordinator: Coordinating) {
+        self.coordinator = coordinator
+        self.viewState = LoginViewState()
+        self.viewModel = LoginViewModel(coordinator: coordinator, viewState: viewState)
+        self.view = LoginFormView(viewState: viewState, handler: FormEventHandler(viewModel))
+    }
+}
+
+// ViewState
+final class LoginViewState: FormViewState {
+    @Published var email: String = ""
+    @Published var password: String = ""
+
+    override func validate() -> Bool {
+        fieldErrors.removeAll()
+
+        if email.isEmpty {
+            fieldErrors["email"] = "Email is required"
+        }
+        if password.count < 8 {
+            fieldErrors["password"] = "Password must be at least 8 characters"
+        }
+
+        return fieldErrors.isEmpty
+    }
+}
+
+// ViewModel
+@MainActor
+final class LoginViewModel: FormViewModel<LoginForm> {
+    override func submit() async throws {
+        try await authService.login(
+            email: formViewState.email,
+            password: formViewState.password
+        )
+        coordinate(action: .loginSuccess)
+    }
+}
+
+// View
+struct LoginFormView: FormView {
+    enum Event { }
+
+    @ObservedObject var viewState: LoginViewState
+    let handler: FormEventHandler<Event>
 
     var body: some View {
-        ChildView(counter: $counter)
+        Form {
+            TextField("Email", text: $viewState.email)
+            SecureField("Password", text: $viewState.password)
+
+            if let error = viewState.fieldErrors["email"] {
+                Text(error).foregroundColor(.red)
+            }
+
+            Button("Login") {
+                Task { await viewModel.handleSubmit() }
+            }
+            .disabled(viewState.isSubmitting)
+        }
     }
 }
-
-struct ChildView: View {
-    @ExternalizedState var counter: Int
-
-    var body: some View {
-        Button("Increment") { counter += 1 }
-    }
-}
 ```
 
-#### AnimatedState
+---
 
-Animated property wrapper for smooth transitions:
+## Signals
 
-```swift
-@AnimatedState var isExpanded = false
-
-Button("Toggle") {
-    isExpanded.toggle()
-}
-```
-
-#### OptionalBinding
-
-Convert optional bindings to non-optional:
+Cross-page communication via signals:
 
 ```swift
-@State var text: String?
-
-TextField("Enter text", text: OptionalBinding($text))
-```
-
-### Theming
-
-Define your theme conforming to the `Theme` protocol:
-
-```swift
-struct MyTheme: Theme {
-    var colors: Colors {
-        Colors(
-            background: BackgroundColors(
-                primary: Color.white,
-                secondary: Color.gray
-            ),
-            // ... other colors
-        )
-    }
-
-    var spacing: Spacing {
-        Spacing(small: 8, medium: 16, large: 24)
-    }
-
-    // ... other theme properties
-}
-```
-
-Apply theme at app root:
-
-```swift
-MyRootView()
-    .environment(\.theme, MyTheme())
-```
-
-### Navigation and Rewinding
-
-The `Rewinder` manages back navigation:
-
-```swift
-PagePresenter(mode: .normal) {
-    MyView()
-}
-.environment(\.rewinder, Rewinder(rewindStyle: .chevron) {
-    // Handle back navigation
-})
-```
-
-Rewind styles:
-- `.chevron`: Left chevron button
-- `.cancel`: "Cancel" text button
-- `.x`: X mark button
-
-### Keyboard Adaptability
-
-Control keyboard behavior with preferences:
-
-```swift
-MyView()
-    .preference(
-        key: KeyboardAdaptabilityPreferenceKey.self,
-        value: KeyboardAdaptability(
-            preventDismissOnTap: false,
-            preventResizing: true,
-            preventShifting: false
-        )
-    )
-```
-
-## Architecture Example
-
-```swift
-// 1. Define your module
-struct ProfileModule: ConfigurableModule {
-    typealias View = ProfileView
-    typealias ViewModel = ProfileViewModel
-    typealias ViewState = ProfileViewState
-
-    let view: ProfileView
-    let viewModel: ProfileViewModel
-    let viewState: ProfileViewState
-
-    init(userId: String) {
-        let viewState = ProfileViewState()
-        let viewModel = ProfileViewModel(userId: userId, viewState: viewState)
-        let view = ProfileView(viewModel: viewModel, viewState: viewState)
-
-        self.view = view
-        self.viewModel = viewModel
-        self.viewState = viewState
-    }
-}
-
-// 2. Define your coordinator
-class ProfileCoordinator: Coordinator {
+// Define signal
+struct UserUpdatedSignal: PageSignal {
     let userId: String
-
-    init(userId: String, navigationController: UINavigationController) {
-        self.userId = userId
-        super.init(navigationController: navigationController)
-    }
-
-    override func start() {
-        let module = ProfileModule(userId: userId)
-        push(module: module)
-    }
 }
 
-// 3. Launch from parent coordinator
-func showProfile(userId: String) {
-    let coordinator = ProfileCoordinator(
-        userId: userId,
-        navigationController: navigationController
-    )
-    coordinate(coordinator)
+// Send signal
+coordinator.send(signal: UserUpdatedSignal(userId: "123"))
+
+// Receive in ViewModel
+override func handle(signal: ProfilePage.Signal) {
+    if let signal = signal as? UserUpdatedSignal {
+        Task { await refreshUser(id: signal.userId) }
+    }
 }
 ```
 
-## View Helpers
+---
 
-### Conditional View Modifiers
+## Child Coordinators
 
-Apply modifiers conditionally:
+For modular navigation flows:
 
 ```swift
-Text("Hello")
-    .if(isHighlighted) { view in
-        view.foregroundColor(.red)
+final class AppCoordinator: Coordinator {
+    func showOnboarding() {
+        let coordinator = OnboardingCoordinator(rootViewController: activeViewController)
+        coordinator.onComplete = { [weak self] in
+            self?.showHome()
+        }
+        startCoordinator(coordinator, withAction: .present(rewindStyle: .none))
     }
-```
 
-### Lazy View
+    func showHome() {
+        let coordinator = HomeCoordinator(rootViewController: activeViewController)
+        startCoordinator(coordinator, withAction: .push(rewindStyle: .none))
+    }
+}
 
-Defer view creation until needed:
+final class OnboardingCoordinator: Coordinator {
+    var onComplete: (() -> Void)?
 
-```swift
-LazyView {
-    ExpensiveView()
+    override func start(with action: NavigationAction) {
+        showWelcome()
+    }
+
+    func showWelcome() {
+        let page = WelcomePage(coordinator: self)
+        // ...
+    }
+
+    func completeOnboarding() {
+        end()
+        onComplete?()
+    }
 }
 ```
 
-## Property Wrappers Reference
+---
+
+## Property Wrappers
 
 | Wrapper | Purpose | Example |
 |---------|---------|---------|
 | `@ExternalizedState` | Share state across views | `@ExternalizedState var count = 0` |
 | `@AnimatedState` | Animated value changes | `@AnimatedState var progress = 0.5` |
-| `@OptionalBinding` | Unwrap optional bindings | `OptionalBinding($text)` |
+| `OptionalBinding` | Unwrap optional bindings | `OptionalBinding($text)` |
 
-## Navigation Actions
+---
 
-| Action | Description | Usage |
-|--------|-------------|-------|
-| `push` | Push onto stack | Standard hierarchical navigation |
-| `present` | Modal presentation | Full-screen modal |
-| `modal` | Bottom sheet | Custom bottom sheet modal |
-| `system` | System presentation | Use system presentation |
-| `handoff` | Coordinator handoff | Transfer to another coordinator |
+## Theming
 
-## Presentation Modes
-
-### PageController
-
-Standard full-page presentation with navigation bar:
+### Define a Theme
 
 ```swift
-let controller = PageController(
-    module: myModule,
-    mode: .normal,
-    rewinder: rewinder
-)
+struct MyTheme: Theme {
+    var colors: ColorStylesProviding { MyColors() }
+    var spacing: SpacingStylesProviding { MySpacing() }
+    var typography: TypographyStylesProviding { MyTypography() }
+}
 ```
 
-### ModalController
-
-Bottom sheet modal presentation:
+### Apply Theme
 
 ```swift
-let controller = ModalController(
-    module: myModule,
-    mode: .normal,
-    rewinder: rewinder
-)
+MyRootView()
+    .environment(\.theme, AnyTheme(MyTheme()))
 ```
 
-## Notes
-
-This framework was extracted from a larger application and has been cleaned to remove project-specific dependencies. Some features have been simplified or removed:
-
-- **Navigation Preferences**: The original navigation header preference system has been removed. Implement your own preference system if needed.
-- **Onboarding**: Project-specific onboarding mode was removed. Implement your own onboarding flow if needed.
-- **Theme Implementation**: You must provide your own `Theme` implementation. The framework provides the protocol and environment key.
-- **Form Modules**: Form-specific modules were removed. Build your own form modules using the base `Module` protocol.
-- **Tab Navigation**: Tab-based navigation was removed. Use standard UIKit tab bar controllers.
+---
 
 ## License
 
-Copyright © 2025 PageKit, Inc. All rights reserved.
+Copyright 2025 PageKit. All rights reserved.
