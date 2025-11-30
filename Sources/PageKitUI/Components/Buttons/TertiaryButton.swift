@@ -1,5 +1,5 @@
 //
-//  GhostButton.swift
+//  TertiaryButton.swift
 //
 //  Copyright © 2025 PageKit All rights reserved.
 //
@@ -7,19 +7,20 @@
 import SwiftUI
 import PageKitTheming
 
-/// A ghost button with transparent background using the theme's ghost button style
+/// A tertiary button with subtle styling using the theme's tertiary button style
 ///
-/// GhostButton is used for subtle actions that don't need visual emphasis.
-/// It has a transparent background with only text and optional border visible.
+/// TertiaryButton is used for subtle actions that don't need visual emphasis.
+/// It typically has a transparent or very light background with optional border.
+/// Part of the button hierarchy: Primary → Secondary → Tertiary.
 ///
 /// Example usage:
 /// ```swift
-/// GhostButton(text: "Cancel", onClick: {
+/// TertiaryButton(text: "Cancel", onClick: {
 ///     // Handle cancel action
 /// })
 /// .buttonSize(.medium)
 /// ```
-public struct GhostButton<T: ImageIconProtocol>: ButtonConfigurable {
+public struct TertiaryButton<T: ImageIconProtocol>: ButtonConfigurable {
 	public typealias IconType = T
 
 	public let text: String
@@ -33,7 +34,7 @@ public struct GhostButton<T: ImageIconProtocol>: ButtonConfigurable {
 	@Environment(\.theme)
 	private var theme: AnyTheme
 
-	/// Creates a ghost button
+	/// Creates a tertiary button
 	/// - Parameters:
 	///   - text: The button text
 	///   - onClick: Action to perform when clicked
@@ -44,7 +45,7 @@ public struct GhostButton<T: ImageIconProtocol>: ButtonConfigurable {
 
 	public var body: some View {
 		BaseButton(
-			style: theme.buttons.ghost,
+			style: theme.buttons.tertiary,
 			size: buttonSize,
 			text: text,
 			leadingIcon: leadingIcon,

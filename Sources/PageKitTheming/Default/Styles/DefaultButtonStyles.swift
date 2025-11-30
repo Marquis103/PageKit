@@ -36,20 +36,20 @@ public struct DefaultButtonStyles: ButtonStylesProviding {
 	public let primary: DefaultButtonStyle
 	public let secondary: DefaultButtonStyle
 	public let destructive: DefaultButtonStyle
-	public let ghost: DefaultButtonStyle
+	public let tertiary: DefaultButtonStyle
 	public let link: DefaultButtonStyle
 
 	public init(
 		primary: DefaultButtonStyle,
 		secondary: DefaultButtonStyle,
 		destructive: DefaultButtonStyle,
-		ghost: DefaultButtonStyle,
+		tertiary: DefaultButtonStyle,
 		link: DefaultButtonStyle
 	) {
 		self.primary = primary
 		self.secondary = secondary
 		self.destructive = destructive
-		self.ghost = ghost
+		self.tertiary = tertiary
 		self.link = link
 	}
 
@@ -76,7 +76,7 @@ public struct DefaultButtonStyles: ButtonStylesProviding {
 				contentColor: .white,
 				cornerRadius: 8
 			),
-			ghost: DefaultButtonStyle(
+			tertiary: DefaultButtonStyle(
 				backgroundColor: .clear,
 				contentColor: textColor,
 				cornerRadius: 8,

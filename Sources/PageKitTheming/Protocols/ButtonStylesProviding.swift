@@ -26,6 +26,6 @@ public protocol ButtonStylesProviding {
 	var primary: Style { get }
 	var secondary: Style { get }
 	var destructive: Style { get }
-	var ghost: Style { get }
+	var tertiary: Style { get }
 	var link: Style { get }
 }
