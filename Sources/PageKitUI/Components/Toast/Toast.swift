@@ -4,20 +4,15 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
-import Foundation
+import UIKit
+import SwiftUI
 
 /// Static API for showing toast notifications
 ///
 /// Toast provides a simple static interface for showing notifications from anywhere
 /// in your app, including ViewModels where @Environment is not available.
 ///
-/// Setup (at app root):
-/// ```swift
-/// ContentView()
-///     .toastable()
-/// ```
-///
-/// Usage (anywhere):
+/// No setup required - just call it anywhere:
 /// ```swift
 /// // In ViewModel
 /// func save() async {
@@ -36,14 +31,48 @@ import Foundation
 /// }
 /// ```
 public enum Toast {
-	/// Shared toast manager - registered by .toastable() modifier
+	/// The toast window - created lazily on first use
 	@MainActor
-	private static var sharedManager: ToastManager?
+	private static var window: ToastWindow?
 
-	/// Registers the toast manager (called by .toastable() modifier)
+	/// The toast manager - created lazily on first use
 	@MainActor
-	internal static func register(_ manager: ToastManager) {
-		sharedManager = manager
+	private static var manager: ToastManager?
+
+	/// Lazily initializes the toast system on first use
+	@MainActor
+	private static func ensureInitialized() {
+		guard window == nil else { return }
+
+		let manager = ToastManager()
+		self.manager = manager
+
+		// Get the active window scene
+		guard let windowScene = UIApplication.shared.connectedScenes
+			.compactMap({ $0 as? UIWindowScene })
+			.first(where: { $0.activationState == .foregroundActive })
+			?? UIApplication.shared.connectedScenes
+			.compactMap({ $0 as? UIWindowScene })
+			.first
+		else {
+			return
+		}
+
+		// Create a passthrough window above all content
+		let window = ToastWindow(windowScene: windowScene)
+		window.windowLevel = .alert + 1
+		window.backgroundColor = .clear
+		window.isUserInteractionEnabled = true
+
+		let hostingController = UIHostingController(
+			rootView: ToastOverlayView(manager: manager)
+				.frame(maxWidth: .infinity, maxHeight: .infinity)
+		)
+		hostingController.view.backgroundColor = .clear
+		window.rootViewController = hostingController
+
+		window.isHidden = false
+		self.window = window
 	}
 
 	// MARK: - Static API
@@ -54,7 +83,8 @@ public enum Toast {
 	///   - duration: Optional custom duration
 	@MainActor
 	public static func show(success message: String, duration: TimeInterval? = nil) {
-		sharedManager?.success(message, duration: duration)
+		ensureInitialized()
+		manager?.success(message, duration: duration)
 	}
 
 	/// Shows an error toast
@@ -63,7 +93,8 @@ public enum Toast {
 	///   - duration: Optional custom duration
 	@MainActor
 	public static func show(error message: String, duration: TimeInterval? = nil) {
-		sharedManager?.error(message, duration: duration)
+		ensureInitialized()
+		manager?.error(message, duration: duration)
 	}
 
 	/// Shows an info toast
@@ -72,7 +103,8 @@ public enum Toast {
 	///   - duration: Optional custom duration
 	@MainActor
 	public static func show(info message: String, duration: TimeInterval? = nil) {
-		sharedManager?.info(message, duration: duration)
+		ensureInitialized()
+		manager?.info(message, duration: duration)
 	}
 
 	/// Shows a warning toast
@@ -81,25 +113,47 @@ public enum Toast {
 	///   - duration: Optional custom duration
 	@MainActor
 	public static func show(warning message: String, duration: TimeInterval? = nil) {
-		sharedManager?.warning(message, duration: duration)
+		ensureInitialized()
+		manager?.warning(message, duration: duration)
 	}
 
 	/// Shows a custom toast message
 	/// - Parameter toast: The toast message to show
 	@MainActor
 	public static func show(_ toast: ToastMessage) {
-		sharedManager?.show(toast)
+		ensureInitialized()
+		manager?.show(toast)
 	}
 
 	/// Dismisses the current toast
 	@MainActor
 	public static func dismiss() {
-		sharedManager?.dismiss()
+		manager?.dismiss()
 	}
 
 	/// Dismisses all toasts and clears the queue
 	@MainActor
 	public static func dismissAll() {
-		sharedManager?.dismissAll()
+		manager?.dismissAll()
+	}
+}
+
+// MARK: - ToastWindow
+
+/// Custom UIWindow that passes through touches except on the toast view itself
+private class ToastWindow: UIWindow {
+	override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+		guard let hitView = super.hitTest(point, with: event) else {
+			return nil
+		}
+
+		// Pass through touches unless they're on a view that handles them
+		// The hosting controller's root view will be clear, so we check if
+		// the hit view is something other than the root hosting view
+		if hitView === rootViewController?.view {
+			return nil
+		}
+
+		return hitView
 	}
 }
