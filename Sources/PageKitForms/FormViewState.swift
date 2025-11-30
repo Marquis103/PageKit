@@ -16,8 +16,8 @@ import PageKit
 /// Example:
 /// ```swift
 /// class LoginFormViewState: FormViewState {
-///     @Published var email = ""
-///     @Published var password = ""
+///     var email = ""
+///     var password = ""
 ///
 ///     override func validate() -> Bool {
 ///         validateField("email", value: email, validators: [.required, .email])
@@ -28,19 +28,19 @@ import PageKit
 /// ```
 open class FormViewState: PageViewState {
 	/// Whether the entire form is valid
-	@Published public private(set) var isValid: Bool = false
+	public private(set) var isValid: Bool = false
 
 	/// Field-level validation errors (key: field name, value: error message)
-	@Published public private(set) var errors: [String: String] = [:]
+	public private(set) var errors: [String: String] = [:]
 
 	/// Whether the form is currently being submitted
-	@Published public var isSubmitting: Bool = false
+	public var isSubmitting: Bool = false
 
 	/// Whether the form has been modified by the user
-	@Published public var isDirty: Bool = false
+	public var isDirty: Bool = false
 
 	/// Form-level error message (e.g., API error)
-	@Published public var formError: String?
+	public var formError: String?
 
 	public override init() {
 		super.init()

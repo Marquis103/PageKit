@@ -24,7 +24,6 @@ import SwiftUI
 ///     detailSlot: .detail
 /// )
 /// ```
-@available(iOS 17, *)
 public struct SplitLayout<Slot: ContainerSlot>: ContainerLayout {
 	/// The slot displayed in the sidebar (left) column.
 	public let sidebarSlot: Slot
@@ -71,7 +70,6 @@ public struct SplitLayout<Slot: ContainerSlot>: ContainerLayout {
 // MARK: - SplitLayoutView
 
 /// Internal SwiftUI view that renders the split layout.
-@available(iOS 17, *)
 @MainActor
 private struct SplitLayoutView<Slot: ContainerSlot>: View {
 	let sidebarSlot: Slot

@@ -10,8 +10,6 @@ import Foundation
 
 /// Protocol for defining named slots (regions) in a container layout.
 ///
-/// - Note: Requires iOS 17.0 or later.
-///
 /// Slots identify where Pages can be placed within a multi-page container.
 /// Define your slots as an enum conforming to this protocol:
 ///
@@ -24,7 +22,6 @@ import Foundation
 ///     static var primary: MailSlots { .sidebar }
 /// }
 /// ```
-@available(iOS 17, *)
 public protocol ContainerSlot: Hashable, CaseIterable, RawRepresentable where RawValue == String {
 	/// The primary slot that receives initial focus.
 	///

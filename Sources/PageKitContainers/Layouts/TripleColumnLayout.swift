@@ -25,7 +25,6 @@ import SwiftUI
 ///     detailSlot: .detail
 /// )
 /// ```
-@available(iOS 17, *)
 public struct TripleColumnLayout<Slot: ContainerSlot>: ContainerLayout {
 	/// The slot displayed in the sidebar (leftmost) column.
 	public let sidebarSlot: Slot
@@ -72,7 +71,6 @@ public struct TripleColumnLayout<Slot: ContainerSlot>: ContainerLayout {
 // MARK: - TripleColumnLayoutView
 
 /// Internal SwiftUI view that renders the triple-column layout.
-@available(iOS 17, *)
 @MainActor
 private struct TripleColumnLayoutView<Slot: ContainerSlot>: View {
 	let sidebarSlot: Slot

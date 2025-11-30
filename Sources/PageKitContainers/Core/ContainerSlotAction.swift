@@ -12,7 +12,6 @@ import PageKit
 ///
 /// Use these actions to update slot contents from within a coordinator's
 /// `coordinate(action:)` method.
-@available(iOS 17, *)
 public enum ContainerSlotAction<Slot: ContainerSlot> {
 	/// Update a slot with a new Page.
 	case updateSlot(Slot, with: any Page)

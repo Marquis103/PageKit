@@ -28,7 +28,6 @@ import SwiftUI
 /// Pages hosted in a `PageSlot` work identically to pages hosted in a
 /// `PageHostController` - they receive the same lifecycle callbacks and
 /// can communicate via the shared coordinator's signal system.
-@available(iOS 17, *)
 public struct PageSlot<P: Page>: View {
 	private let page: P
 	@StateObject private var lifecycleManager: PageSlotLifecycle<P>
@@ -57,7 +56,6 @@ public struct PageSlot<P: Page>: View {
 ///
 /// Used internally by `PageContainer` to store Pages of different types
 /// in a single dictionary.
-@available(iOS 17, *)
 @MainActor
 public struct AnyPageSlot: View {
 	private let makeBody: () -> AnyView

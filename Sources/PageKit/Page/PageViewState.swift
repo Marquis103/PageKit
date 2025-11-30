@@ -4,11 +4,11 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
-import Foundation
-import SwiftUI
+import Observation
 
-open class PageViewState: ObservableObject {
-	@Published
+@Observable
+@MainActor
+open class PageViewState {
 	public var isRefreshing = false
 
 	public init() {}

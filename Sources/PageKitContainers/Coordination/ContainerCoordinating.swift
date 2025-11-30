@@ -38,7 +38,6 @@ import UIKit
 ///     }
 /// }
 /// ```
-@available(iOS 17, *)
 public protocol ContainerCoordinating: Coordinating {
 	/// The slot type used by this coordinator's container.
 	associatedtype ContainerSlotType: ContainerSlot
@@ -52,7 +51,6 @@ public protocol ContainerCoordinating: Coordinating {
 
 // MARK: - Default Implementation
 
-@available(iOS 17, *)
 extension ContainerCoordinating where Self: Coordinator {
 	/// Creates a container with the given layout.
 	///
@@ -120,7 +118,6 @@ extension ContainerCoordinating where Self: Coordinator {
 ///         loadItem(signal.itemId)
 ///     }
 /// ```
-@available(iOS 17, *)
 public protocol ContainerSlotSignal: PageSignal {
 	/// The slot type this signal targets.
 	associatedtype Slot: ContainerSlot
@@ -147,7 +144,6 @@ public protocol ContainerSlotSignal: PageSignal {
 ///     }
 /// }
 /// ```
-@available(iOS 17, *)
 public protocol ContainerNavigationStep {
 	/// The slot type for container navigation.
 	associatedtype Slot: ContainerSlot

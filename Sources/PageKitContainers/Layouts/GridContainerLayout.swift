@@ -25,7 +25,6 @@ import SwiftUI
 ///     spacing: 16
 /// )
 /// ```
-@available(iOS 17, *)
 public struct GridContainerLayout<Slot: ContainerSlot>: ContainerLayout {
 	/// Number of columns in the grid.
 	public let columns: Int
@@ -85,7 +84,6 @@ public struct GridContainerLayout<Slot: ContainerSlot>: ContainerLayout {
 // MARK: - GridContainerLayoutView
 
 /// Internal SwiftUI view that renders the grid layout.
-@available(iOS 17, *)
 @MainActor
 private struct GridContainerLayoutView<Slot: ContainerSlot>: View {
 	let columns: Int

@@ -52,23 +52,27 @@ public protocol FormView: PageView where State: FormViewState {
 ///
 /// This is a convenience wrapper around FormViewModel that allows
 /// views to send events to the view model.
-public struct FormEventHandler<Event> {
-	private let handler: (Event) -> Void
+public struct FormEventHandler<Event>: Sendable {
+	private let handler: @Sendable (Event) async -> Void
 
 	public init<VM: FormViewModel<P>, P: Page>(_ viewModel: VM) where P.ViewState: FormViewState {
 		self.handler = { event in
 			// Cast event to the expected type
 			if let typedEvent = event as? P.View.Event {
-				viewModel.handle(event: typedEvent)
+				await viewModel.handle(event: typedEvent)
 			}
 		}
 	}
 
 	public func send(_ event: Event) {
-		handler(event)
+		Task {
+			await handler(event)
+		}
 	}
 
 	public func callAsFunction(_ event: Event) {
-		handler(event)
+		Task {
+			await handler(event)
+		}
 	}
 }

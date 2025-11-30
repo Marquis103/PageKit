@@ -98,21 +98,21 @@ public struct FormField: View {
 ///
 /// Example:
 /// ```swift
-/// FormSubmitButton("Login") {
+/// FormSubmitButton("Login", formState: viewState) {
 ///     await viewModel.handleSubmit()
 /// }
-/// .environmentObject(viewState)
 /// ```
 public struct FormSubmitButton<Label: View>: View {
-	@EnvironmentObject private var formViewState: FormViewState
-
+	private let formViewState: FormViewState
 	private let action: () async -> Void
 	private let label: Label
 
 	public init(
+		formState: FormViewState,
 		action: @escaping () async -> Void,
 		@ViewBuilder label: () -> Label
 	) {
+		self.formViewState = formState
 		self.action = action
 		self.label = label()
 	}
@@ -138,9 +138,10 @@ extension FormSubmitButton where Label == Text {
 	/// Create a submit button with a text label
 	public init(
 		_ title: String,
+		formState: FormViewState,
 		action: @escaping () async -> Void
 	) {
-		self.init(action: action) {
+		self.init(formState: formState, action: action) {
 			Text(title)
 		}
 	}
@@ -195,13 +196,14 @@ public struct FormSection<Content: View>: View {
 ///
 /// Example:
 /// ```swift
-/// FormErrorView()
-///     .environmentObject(viewState)
+/// FormErrorView(formState: viewState)
 /// ```
 public struct FormErrorView: View {
-	@EnvironmentObject private var formViewState: FormViewState
+	private let formViewState: FormViewState
 
-	public init() {}
+	public init(formState: FormViewState) {
+		self.formViewState = formState
+	}
 
 	public var body: some View {
 		if let error = formViewState.formError, !error.isEmpty {
@@ -237,14 +239,15 @@ public struct FormErrorView: View {
 /// ```swift
 /// ZStack {
 ///     MyFormView()
-///     FormLoadingView()
-///         .environmentObject(viewState)
+///     FormLoadingView(formState: viewState)
 /// }
 /// ```
 public struct FormLoadingView: View {
-	@EnvironmentObject private var formViewState: FormViewState
+	private let formViewState: FormViewState
 
-	public init() {}
+	public init(formState: FormViewState) {
+		self.formViewState = formState
+	}
 
 	public var body: some View {
 		if formViewState.isSubmitting {
@@ -276,16 +279,15 @@ public struct FormLoadingView: View {
 /// Example:
 /// ```swift
 /// TextField("Email", text: $viewState.email)
-/// FormFieldError(for: "email")
-///     .environmentObject(viewState)
+/// FormFieldError(for: "email", formState: viewState)
 /// ```
 public struct FormFieldError: View {
-	@EnvironmentObject private var formViewState: FormViewState
-
+	private let formViewState: FormViewState
 	private let field: String
 
-	public init(for field: String) {
+	public init(for field: String, formState: FormViewState) {
 		self.field = field
+		self.formViewState = formState
 	}
 
 	public var body: some View {

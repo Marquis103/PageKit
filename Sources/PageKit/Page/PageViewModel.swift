@@ -16,6 +16,7 @@ public protocol PageViewModelProtocol {
 
 // MARK: - PageViewModel
 
+@MainActor
 open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 	private let coordinator: Coordinating
 	private var signalCancellables: Set<AnyCancellable> = []
@@ -29,6 +30,8 @@ open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 		subscribeToSignals(coordinator)
 	}
 
+	// MARK: - Lifecycle
+
 	open func onStart() async {
 		// Override
 	}
@@ -41,45 +44,39 @@ open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 		// Override
 	}
 
-	// onEnd cannot be async
-	open func onEnd() {
+	/// Called when the page is being deallocated.
+	/// Must be nonisolated because it's called from deinit.
+	nonisolated open func onEnd() {
 		// Override
 	}
 
-	// TODO: Remove this in favor of async function
-	open func onStart() {
+	// MARK: - Event Handling
+
+	open func handle(event _: P.View.Event) async {
 		// Override
 	}
 
-	// TODO: Remove this in favor of async function
-	open func onResume() {
+	open func handle(signal _: P.Signal) async {
 		// Override
 	}
 
-	// TODO: Remove this in favor of async function
-	open func onPause() {
-		// Override
-	}
-
-	// TODO: Make this async
-	open func handle(event _: P.View.Event) {
-		// Override
-	}
-
-	// TODO: Make this async
-	open func handle(signal _: P.Signal) {
-		// Override
-	}
+	// MARK: - Coordination
 
 	public final func coordinate(action: P.Action) {
 		coordinator.coordinate(action: action)
 	}
 
+	// MARK: - Signal Subscription
+
 	private func subscribeToSignals(_ publisher: some PageSignalPublisher) {
 		publisher.signalPublisher
 			.sink { [weak self] signal in
+				guard let self else { return }
 				if let signal = signal as? P.Signal {
-					self?.handle(signal: signal)
+					Task { @MainActor [weak self] in
+						guard let self else { return }
+						await self.handle(signal: signal)
+					}
 				}
 			}
 			.store(in: &signalCancellables)

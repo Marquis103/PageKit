@@ -11,13 +11,13 @@ import Foundation
 public protocol PageEventHandlable {
 	associatedtype Event = Void
 
-	func handle(event: Event)
+	func handle(event: Event) async
 }
 
 // MARK: - PageEventHandler
 
 public struct PageEventHandler<Event>: PageEventHandlable {
-	private let _handle: (Event) -> Void
+	private let _handle: (Event) async -> Void
 	private let _onRefresh: (() async -> Void)?
 
 	public init<H: PageEventHandlable>(_ handler: H) where H.Event == Event {
@@ -25,8 +25,8 @@ public struct PageEventHandler<Event>: PageEventHandlable {
 		_onRefresh = (handler as? Refreshable)?.onRefresh
 	}
 
-	public func handle(event: Event) {
-		_handle(event)
+	public func handle(event: Event) async {
+		await _handle(event)
 	}
 }
 
