@@ -29,6 +29,10 @@ public enum NavigationAction {
 	/// Attaches the controller to the key window
 	case window
 
+	/// Presents content within a container slot (used by PageKitContainers)
+	/// The container handles its own layout and slot management
+	case container
+
 	public func rewind(
 		viewController: UIViewController,
 		animated: Bool,
@@ -60,6 +64,10 @@ public enum NavigationAction {
 				break
 			case .window:
 				// Note: Window dismissal removed - implement in your app coordinator
+				break
+			case .container:
+				// Container slot content is managed by PageContainer, not rewound directly
+				// The container handles slot clearing through its own API
 				break
 		}
 	}

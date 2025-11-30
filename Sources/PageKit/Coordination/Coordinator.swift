@@ -214,6 +214,12 @@ open class Coordinator:
 			case .window:
 				viewController.loadViewIfNeeded()
 				didStartCompletion?()
+			case .container:
+				// Container navigation is handled by pushing the container view controller
+				// The container manages its own slot content internally
+				viewController.hidesBottomBarWhenPushed = true
+				activeNavigationController?.delegate = self
+				activeNavigationController?.pushViewController(viewController, animated: true)
 		}
 
 		let historyItem = CoordinatorHistoryItem(

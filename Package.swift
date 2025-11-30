@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "PageKit",
     platforms: [
-        .iOS(.v16)
+        .iOS(.v17)
     ],
     products: [
         // Core page system with coordination and navigation
@@ -28,6 +28,11 @@ let package = Package(
         .library(
             name: "PageKitForms",
             targets: ["PageKitForms"]
+        ),
+        // Multi-page container system for iPad - requires core
+        .library(
+            name: "PageKitContainers",
+            targets: ["PageKitContainers"]
         ),
         // Legacy support - includes all packages
         .library(
@@ -59,6 +64,12 @@ let package = Package(
             name: "PageKitForms",
             dependencies: ["PageKit"],
             path: "Sources/PageKitForms"
+        ),
+        // Container system - depends on core for multi-page iPad layouts
+        .target(
+            name: "PageKitContainers",
+            dependencies: ["PageKit"],
+            path: "Sources/PageKitContainers"
         ),
         // Legacy module - combines all for backwards compatibility
         .target(
