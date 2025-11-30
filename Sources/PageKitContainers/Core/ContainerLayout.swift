@@ -24,6 +24,7 @@ import SwiftUI
 ///     }
 /// }
 /// ```
+@available(iOS 17, *)
 public protocol ContainerLayout {
 	/// The slot type this layout works with.
 	associatedtype Slot: ContainerSlot
@@ -56,6 +57,7 @@ public protocol ContainerLayout {
 
 // MARK: - Default Implementations
 
+@available(iOS 17, *)
 extension ContainerLayout {
 	/// Default: Container-level rewinding (entire container dismisses together).
 	public var supportsPerSlotRewinding: Bool { false }

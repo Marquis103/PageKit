@@ -27,6 +27,7 @@ import UIKit
 /// container.assign(DetailPage(coordinator: self), to: .detail)
 /// navigate(to: container, with: .push(rewindStyle: .chevron))
 /// ```
+@available(iOS 17, *)
 public class PageContainer<Layout: ContainerLayout>: UIViewController {
 	// MARK: - Properties
 

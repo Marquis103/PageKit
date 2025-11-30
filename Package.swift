@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "PageKit",
     platforms: [
-        .iOS(.v17)
+        .iOS(.v15)  // Core packages support iOS 15+; PageKitContainers requires iOS 17+ (uses @available)
     ],
     products: [
         // Core page system with coordination and navigation

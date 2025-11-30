@@ -22,6 +22,7 @@ import SwiftUI
 ///     }
 /// }
 /// ```
+@available(iOS 17, *)
 @MainActor
 public struct SlotContentProvider<Slot: ContainerSlot> {
 	private let contents: [Slot: AnyView]

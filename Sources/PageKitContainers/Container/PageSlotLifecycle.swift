@@ -14,6 +14,7 @@ import SwiftUI
 /// This class tracks appearance state and calls the appropriate ViewModel
 /// lifecycle methods (`onStart`, `onResume`, `onPause`, `onEnd`) based on
 /// SwiftUI's `onAppear`/`onDisappear` callbacks.
+@available(iOS 17, *)
 @MainActor
 public final class PageSlotLifecycle<P: Page>: ObservableObject {
 	private let page: P

@@ -25,6 +25,7 @@ import SwiftUI
 ///     spacing: 8
 /// )
 /// ```
+@available(iOS 17, *)
 public struct StackLayout<Slot: ContainerSlot>: ContainerLayout {
 	/// The axis for stacking Pages.
 	public let axis: Axis.Set
@@ -71,6 +72,7 @@ public struct StackLayout<Slot: ContainerSlot>: ContainerLayout {
 // MARK: - StackLayoutView
 
 /// Internal SwiftUI view that renders the stack layout.
+@available(iOS 17, *)
 @MainActor
 private struct StackLayoutView<Slot: ContainerSlot>: View {
 	let axis: Axis.Set
