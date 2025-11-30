@@ -1,10 +1,10 @@
 //
-//  ModuleFramework.swift
+//  PageFramework.swift
 //
 //  Copyright © 2025 PageKit All rights reserved.
 //
-//  Backwards compatibility re-export module.
-//  This module re-exports all PageKit packages for existing code that imports ModuleFramework.
+//  Umbrella module that re-exports all core PageKit packages.
+//  Import this for convenience, or import individual packages for finer control.
 //
 
 @_exported import PageKit

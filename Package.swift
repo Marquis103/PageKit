@@ -34,10 +34,10 @@ let package = Package(
             name: "PageKitContainers",
             targets: ["PageKitContainers"]
         ),
-        // Legacy support - includes all packages
+        // Umbrella module - includes all core packages
         .library(
-            name: "ModuleFramework",
-            targets: ["ModuleFramework"]
+            name: "PageFramework",
+            targets: ["PageFramework"]
         ),
     ],
     targets: [
@@ -71,11 +71,11 @@ let package = Package(
             dependencies: ["PageKit"],
             path: "Sources/PageKitContainers"
         ),
-        // Legacy module - combines all for backwards compatibility
+        // Umbrella module - combines all core packages
         .target(
-            name: "ModuleFramework",
+            name: "PageFramework",
             dependencies: ["PageKit", "PageKitTheming", "PageKitUI", "PageKitForms"],
-            path: "Sources/ModuleFramework"
+            path: "Sources/PageFramework"
         ),
         // Tests
         .testTarget(
