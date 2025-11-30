@@ -53,10 +53,10 @@ let package = Package(
             dependencies: [],
             path: "Sources/PageKitTheming"
         ),
-        // UI components - depends on theming
+        // UI components - depends on theming and core (for PageEventHandler)
         .target(
             name: "PageKitUI",
-            dependencies: ["PageKitTheming"],
+            dependencies: ["PageKitTheming", "PageKit"],
             path: "Sources/PageKitUI"
         ),
         // Form system - depends on core
