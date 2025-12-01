@@ -26,16 +26,18 @@ PageKit provides the foundational components for building modular iOS applicatio
 Add PageKit to your project using Xcode:
 
 1. File > Add Package Dependencies
-2. Enter the repository URL
-3. Select the version or branch
+2. Enter: `https://github.com/Marquis103/PageKit`
+3. Select "Branch" and use `main`
 
 Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/your-org/PageKit", from: "1.0.0")
+    .package(url: "https://github.com/Marquis103/PageKit", branch: "main")
 ]
 ```
+
+> **Note**: This is a private repository. Ensure you have access and your SSH keys are configured for GitHub.
 
 Then import the packages you need:
 
