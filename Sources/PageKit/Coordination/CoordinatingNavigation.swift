@@ -46,6 +46,10 @@ extension CoordinatingNavigation {
 
 	private func rewinder(for action: NavigationAction) -> Rewinder {
 		switch action {
+			case let .sheet(configuration):
+				Rewinder(rewindStyle: configuration.rewindStyle) { [weak self] in
+					self?.rewind()
+				}
 			case let .modal(rewindStyle),
 			     let .present(rewindStyle, _),
 			     let .push(rewindStyle):

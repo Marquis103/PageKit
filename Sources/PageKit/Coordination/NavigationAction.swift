@@ -7,7 +7,28 @@
 import UIKit
 
 public enum NavigationAction {
-	/// Slide up modal from bottom
+	/// Native iOS bottom sheet using UISheetPresentationController
+	///
+	/// Provides full integration with PageKit's Coordinator pattern:
+	/// - Signals flow from parent to sheet
+	/// - Actions flow from sheet to coordinator
+	/// - Interactive dismissal updates coordinator history
+	///
+	/// ```swift
+	/// // Standard sheet with medium/large detents
+	/// navigate(to: settingsPage, with: .sheet())
+	///
+	/// // Compact half-height sheet
+	/// navigate(to: filtersPage, with: .sheet(.compact))
+	///
+	/// // Non-dismissible for required flows
+	/// navigate(to: onboardingPage, with: .sheet(.required))
+	/// ```
+	@available(iOS 15.0, *)
+	case sheet(SheetConfiguration = .standard)
+
+	/// Slide up modal from bottom using custom SwiftUI animation
+	@available(*, deprecated, message: "Use .sheet() instead for native iOS bottom sheet presentation")
 	case modal(rewindStyle: RewindStyle = .none)
 
 	/// Just starts the coordinator and creates the controller
@@ -45,6 +66,9 @@ public enum NavigationAction {
 
 				viewController.navigationController?.popViewController(animated: animated)
 				completion?()
+			case .sheet:
+				// Dismiss the sheet
+				viewController.dismiss(animated: animated, completion: completion)
 			case .modal:
 				if let dismissable = viewController as? ModalDismissable {
 					dismissable.dismissModal {
@@ -74,10 +98,22 @@ public enum NavigationAction {
 
 	public func pageViewController(for page: some Page, mode: PageMode, rewinder: Rewinder) -> UIViewController {
 		switch self {
+			case let .sheet(configuration):
+				if #available(iOS 15.0, *) {
+					return SheetController(
+						page: page,
+						mode: mode,
+						rewinder: rewinder,
+						configuration: configuration
+					)
+				} else {
+					// Fallback to modal for iOS 14 and earlier
+					return ModalController(page: page, mode: mode, rewinder: rewinder)
+				}
 			case .modal:
-				ModalController(page: page, mode: mode, rewinder: rewinder)
+				return ModalController(page: page, mode: mode, rewinder: rewinder)
 			default:
-				PageHostController(page: page, mode: mode, rewinder: rewinder)
+				return PageHostController(page: page, mode: mode, rewinder: rewinder)
 		}
 	}
 }

@@ -28,7 +28,8 @@ extension CoordinatorDelegate {
 open class Coordinator:
 	NSObject,
 	Coordinating,
-	CoordinatingAction
+	CoordinatingAction,
+	SheetControllerDelegate
 {
 	public var coordinators: [Coordinator?] = []
 
@@ -205,6 +206,15 @@ open class Coordinator:
 				}
 
 				activeController.present(navigationController, animated: true, completion: didStartCompletion)
+			case .sheet:
+				// Set sheet delegate for interactive dismissal handling
+				if #available(iOS 15.0, *),
+				   let sheetController = viewController as? (any SheetControllerDelegate)?
+				{
+					// Use type erasure to set delegate
+					setSheetDelegate(for: viewController)
+				}
+				activeController.present(viewController, animated: true, completion: didStartCompletion)
 			case .modal:
 				activeController.present(viewController, animated: true, completion: didStartCompletion)
 			case .system:
@@ -280,6 +290,33 @@ open class Coordinator:
 
 	@objc private func rewindFromBarButton() {
 		rewind()
+	}
+
+	// MARK: - Sheet Delegate Setup
+
+	@available(iOS 15.0, *)
+	private func setSheetDelegate(for viewController: UIViewController) {
+		// Access the sheetDelegate property via reflection to avoid generic constraints
+		if let sheetController = viewController as? SheetControllerType {
+			sheetController.setSheetDelegate(self)
+		}
+	}
+
+	// MARK: - SheetControllerDelegate
+
+	public func sheetControllerDidDismiss(_ controller: UIViewController) {
+		// Remove the dismissed sheet from history
+		if let index = history.firstIndex(where: { $0.viewController === controller }) {
+			history.remove(at: index)
+			endIfNeeded()
+		}
+	}
+
+	public func sheetController(
+		_ controller: UIViewController,
+		didChangeSelectedDetent detent: SheetDetent?
+	) {
+		// Can be overridden by subclasses if needed
 	}
 
 	// MARK: - PageSignalPublisher

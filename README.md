@@ -12,6 +12,7 @@ PageKit provides the foundational components for building modular iOS applicatio
 - **Property Wrappers**: Reactive state management helpers
 - **Themeable UI**: Environment-based theming system
 - **Forms**: Built-in form handling with validation and submission
+- **View Modifiers**: Animation and layout utilities
 
 ## Requirements
 
@@ -81,15 +82,15 @@ import PageKitUI      // UI components
 │              │ ───────────────▶│              │ ───────────────▶│              │
 │   PageView   │                 │ PageViewModel│                 │ PageViewState│
 │              │◀─────────────── │              │◀─────────────── │              │
-└──────────────┘  @ObservedObject└──────────────┘    @Published   └──────────────┘
+└──────────────┘    @Observable  └──────────────┘                 └──────────────┘
        │                                │
        │         PageEventHandler       │
        └────────────────────────────────┘
 ```
 
-- **PageView** observes ViewState for UI updates
+- **PageView** observes ViewState for UI updates via `@Observable`
 - **PageView** sends events to ViewModel via PageEventHandler
-- **PageViewModel** mutates ViewState in response to events
+- **PageViewModel** mutates ViewState in response to events (async)
 - **PageViewModel** coordinates navigation actions via Coordinator
 
 ### Navigation Flow
@@ -299,7 +300,7 @@ struct SettingsView: PageView {
         case logoutTapped
     }
 
-    @ObservedObject var viewState: SettingsViewState
+    var viewState: SettingsViewState
     let handler: PageEventHandler<Event>
 
     var body: some View {
@@ -318,9 +319,10 @@ struct SettingsView: PageView {
 
 ### PageViewModel
 
-Handles business logic and lifecycle events:
+Handles business logic and lifecycle events. All methods are async and the class requires `@MainActor`:
 
 ```swift
+@MainActor
 open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
     public let viewState: P.ViewState
 
@@ -328,10 +330,13 @@ open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
     open func onStart() async { }
     open func onResume() async { }
     open func onPause() async { }
-    open func onEnd() { }
+    nonisolated open func onEnd() { }
 
-    // Event handling
-    open func handle(event: P.View.Event) { }
+    // Event handling (async)
+    open func handle(event: P.View.Event) async { }
+
+    // Signal handling (async)
+    open func handle(signal: P.Signal) async { }
 
     // Navigation
     public func coordinate(action: P.Action) { }
@@ -357,30 +362,35 @@ final class SettingsViewModel: PageViewModel<SettingsPage> {
     }
 
     private func loadSettings() async {
-        viewState.isLoading = true
+        viewState.isRefreshing = true
         // Load settings...
-        viewState.isLoading = false
+        viewState.isRefreshing = false
     }
 }
 ```
 
 ### PageViewState
 
-Observable state for the view:
+Observable state for the view using Swift's `@Observable` macro:
 
 ```swift
-open class PageViewState: ObservableObject {
-    @Published public var isLoading: Bool = false
-    @Published public var error: Error?
+@Observable
+@MainActor
+open class PageViewState {
+    public var isRefreshing = false
+
+    public init() {}
 }
 ```
 
 Example:
 
 ```swift
+@Observable
+@MainActor
 final class SettingsViewState: PageViewState {
-    @Published var username: String = ""
-    @Published var notificationsEnabled: Bool = true
+    var username: String = ""
+    var notificationsEnabled: Bool = true
 }
 ```
 
@@ -389,10 +399,19 @@ final class SettingsViewState: PageViewState {
 Manages navigation flow and child coordinators:
 
 ```swift
-open class Coordinator: NSObject, Coordinating {
+open class Coordinator: NSObject, Coordinating, CoordinatingAction {
+    // Properties
+    public var coordinators: [Coordinator?] = []
+    public var hasEnded: Bool { get }
+    public private(set) var rootViewController: UIViewController
+    public var history: [CoordinatorHistoryItem] = []
+    public var activeNavigationController: UINavigationController? { get }
+    public var activeViewController: UIViewController { get }
+    public weak var delegate: CoordinatorDelegate?
+
     // Navigation
     public func navigate(to viewController: UIViewController, with action: NavigationAction)
-    public func rewind(animated: Bool = true)
+    public func rewind(animated: Bool = true, shouldEndIfNeeded: Bool = true, completion: (() -> Void)? = nil)
 
     // Child coordinators
     public func startCoordinator<T: Coordinator>(_ coordinator: T, withAction action: NavigationAction) -> T
@@ -409,6 +428,19 @@ open class Coordinator: NSObject, Coordinating {
 }
 ```
 
+### CoordinatorDelegate
+
+Protocol for receiving coordinator lifecycle events:
+
+```swift
+public protocol CoordinatorDelegate: AnyObject {
+    func coordinatorWillStart(_ coordinator: Coordinator)
+    func coordinatorDidStart(_ coordinator: Coordinator)
+    func coordinatorWillEnd(_ coordinator: Coordinator)
+    func coordinatorDidEnd(_ coordinator: Coordinator)
+}
+```
+
 ---
 
 ## Navigation
@@ -419,10 +451,13 @@ open class Coordinator: NSObject, Coordinating {
 |--------|-------------|---------|
 | `.push(rewindStyle:)` | Push onto navigation stack | Standard drill-down |
 | `.present(rewindStyle:, transition:)` | Full-screen modal | Login flow |
-| `.modal` | Bottom sheet modal | Action sheet |
+| `.sheet(configuration:)` | Native iOS bottom sheet | Settings, filters |
 | `.system` | System presentation style | Share sheet |
 | `.window` | Window-level presentation | Onboarding |
+| `.container` | Container slot content | Multi-pane layouts |
 | `.none` | No presentation | Initial setup |
+
+> **Note**: `.modal(rewindStyle:)` is deprecated. Use `.sheet()` instead for native iOS bottom sheet presentation.
 
 ### Rewind Styles
 
@@ -432,6 +467,70 @@ open class Coordinator: NSObject, Coordinating {
 | `.cancel` | "Cancel" text |
 | `.x` | X mark |
 | `.none` | No back button |
+
+### Sheet Configuration (iOS 15+)
+
+The `.sheet()` action uses native `UISheetPresentationController` with full PageKit integration:
+- Signals flow from parent coordinator to sheet
+- Actions flow from sheet back to coordinator
+- Interactive dismissal automatically updates coordinator history
+
+#### Configuration Options
+
+```swift
+SheetConfiguration(
+    detents: [.medium, .large],           // Available heights
+    selectedDetent: .medium,              // Initial height
+    showsGrabber: true,                   // Shows drag indicator
+    cornerRadius: 16,                     // Custom corner radius
+    isDismissible: true,                  // Allow swipe to dismiss
+    largestUndimmedDetent: .medium,       // Dim only above this
+    rewindStyle: .none,                   // Back button style
+    prefersEdgeAttachedInCompactHeight: false,
+    prefersScrollingExpandsWhenScrolledToEdge: true
+)
+```
+
+#### Presets
+
+| Preset | Detents | Dismissible | Use Case |
+|--------|---------|-------------|----------|
+| `.standard` | medium, large | Yes | General purpose |
+| `.compact` | medium | Yes | Quick actions |
+| `.fullScreen` | large | Yes | Full content |
+| `.required` | large | No | Mandatory flows |
+| `.card(height:)` | fixed height | Yes | Fixed-size cards |
+| `.expandable(from:)` | fraction, large | Yes | Expandable panels |
+
+#### Detent Types
+
+| Detent | Description |
+|--------|-------------|
+| `.medium` | Half screen height |
+| `.large` | Full screen height |
+| `.fraction(CGFloat)` | Percentage of screen (0.0-1.0) |
+| `.height(CGFloat)` | Fixed point height |
+
+#### Usage Examples
+
+```swift
+// Standard sheet with medium/large detents
+navigate(to: settingsPage, with: .sheet())
+
+// Compact half-height sheet
+navigate(to: filtersPage, with: .sheet(.compact))
+
+// Non-dismissible for required flows
+navigate(to: onboardingPage, with: .sheet(.required))
+
+// Custom configuration
+let config = SheetConfiguration(
+    detents: [.fraction(0.25), .medium, .large],
+    showsGrabber: true,
+    cornerRadius: 24
+)
+navigate(to: detailsPage, with: .sheet(config))
+```
 
 ### Example Navigation
 
@@ -451,7 +550,7 @@ final class ProfileCoordinator: Coordinator {
 
         case ProfilePage.Action.showImagePicker:
             let picker = UIImagePickerController()
-            navigate(to: picker, with: .modal)
+            navigate(to: picker, with: .sheet(.compact))
         }
     }
 
@@ -478,23 +577,87 @@ public protocol FormPage: Page where ViewState: FormViewState, ViewModel: FormVi
 ### FormViewState
 
 ```swift
+@Observable
+@MainActor
 open class FormViewState: PageViewState {
-    @Published public var isSubmitting: Bool = false
-    @Published public var formError: Error?
-    @Published public var fieldErrors: [String: String] = [:]
-    @Published public var isDirty: Bool = false
+    // State properties
+    public private(set) var isValid: Bool = false
+    public private(set) var errors: [String: String] = [:]
+    public var isSubmitting: Bool = false
+    public var isDirty: Bool = false
+    public var formError: String?
 
-    open func validate() -> Bool
+    // Validation
+    @discardableResult open func validate() -> Bool
+    @discardableResult public func validateField<Value>(_ field: String, value: Value, validators: [FormValidator<Value>]) -> Bool
+    public func errorForField(_ field: String) -> String?
+    public func hasError(for field: String) -> Bool
+
+    // State management
+    public func clearErrors()
+    public func clearError(for field: String)
+    public func setError(for field: String, error: String)
+    public func reset()
+
+    // Submission helpers
+    public func beginSubmission()
+    public func endSubmission()
+    public func handleSubmissionError(_ error: Error)
 }
 ```
 
 ### FormViewModel
 
 ```swift
+@MainActor
 open class FormViewModel<P: Page>: PageViewModel<P> where P.ViewState: FormViewState {
+    public var formViewState: P.ViewState { viewState }
+
     open func submit() async throws
     public func handleSubmit() async
+    @discardableResult public func validate() -> Bool
+    @discardableResult open func validateField(_ field: String) -> Bool
 }
+```
+
+### FormError
+
+```swift
+public enum FormError: LocalizedError {
+    case validationFailed
+    case submissionFailed(String)
+    case networkError
+    case unknown
+}
+```
+
+### Built-in Validators
+
+```swift
+// String validators
+FormValidator.required           // Non-empty string
+FormValidator.email              // Valid email format
+FormValidator.minLength(8)       // Minimum length
+FormValidator.maxLength(100)     // Maximum length
+FormValidator.exactLength(6)     // Exact length
+FormValidator.regex(pattern, message:) // Custom regex
+FormValidator.containsUppercase  // At least one uppercase
+FormValidator.containsLowercase  // At least one lowercase
+FormValidator.containsNumber     // At least one digit
+FormValidator.containsSpecialCharacter // Special character
+FormValidator.phoneNumber        // US phone format
+FormValidator.url                // Valid URL
+
+// Comparable validators
+FormValidator.min(0)             // Minimum value
+FormValidator.max(100)           // Maximum value
+FormValidator.range(0, 100)      // Value range
+
+// Composition
+validator1.and(validator2)       // Both must pass
+validator1.or(validator2)        // Either must pass
+FormValidator.compose([...])     // Chain multiple
+validator.optional()             // Allow nil
 ```
 
 ### Example Form
@@ -515,32 +678,34 @@ final class LoginForm: FormPage {
         self.coordinator = coordinator
         self.viewState = LoginViewState()
         self.viewModel = LoginViewModel(coordinator: coordinator, viewState: viewState)
-        self.view = LoginFormView(viewState: viewState, handler: FormEventHandler(viewModel))
+        self.view = LoginFormView(viewState: viewState, handler: PageEventHandler(viewModel))
     }
 }
 
 // ViewState
+@Observable
+@MainActor
 final class LoginViewState: FormViewState {
-    @Published var email: String = ""
-    @Published var password: String = ""
+    var email: String = ""
+    var password: String = ""
 
     override func validate() -> Bool {
-        fieldErrors.removeAll()
-
-        if email.isEmpty {
-            fieldErrors["email"] = "Email is required"
-        }
-        if password.count < 8 {
-            fieldErrors["password"] = "Password must be at least 8 characters"
-        }
-
-        return fieldErrors.isEmpty
+        validateField("email", value: email, validators: [.required, .email])
+        validateField("password", value: password, validators: [.required, .minLength(8)])
+        return isValid
     }
 }
 
 // ViewModel
 @MainActor
 final class LoginViewModel: FormViewModel<LoginForm> {
+    private let authService: AuthService
+
+    init(coordinator: Coordinating, viewState: LoginViewState, authService: AuthService = .shared) {
+        self.authService = authService
+        super.init(coordinator: coordinator, viewState: viewState)
+    }
+
     override func submit() async throws {
         try await authService.login(
             email: formViewState.email,
@@ -551,23 +716,38 @@ final class LoginViewModel: FormViewModel<LoginForm> {
 }
 
 // View
-struct LoginFormView: FormView {
+struct LoginFormView: PageView {
     enum Event { }
 
-    @ObservedObject var viewState: LoginViewState
-    let handler: FormEventHandler<Event>
+    var viewState: LoginViewState
+    let handler: PageEventHandler<Event>
 
     var body: some View {
         Form {
-            TextField("Email", text: $viewState.email)
-            SecureField("Password", text: $viewState.password)
+            TextField("Email", text: Binding(
+                get: { viewState.email },
+                set: { viewState.email = $0; viewState.isDirty = true }
+            ))
 
-            if let error = viewState.fieldErrors["email"] {
+            SecureField("Password", text: Binding(
+                get: { viewState.password },
+                set: { viewState.password = $0; viewState.isDirty = true }
+            ))
+
+            if let error = viewState.errorForField("email") {
                 Text(error).foregroundColor(.red)
             }
 
+            if let error = viewState.errorForField("password") {
+                Text(error).foregroundColor(.red)
+            }
+
+            if let formError = viewState.formError {
+                Text(formError).foregroundColor(.red)
+            }
+
             Button("Login") {
-                Task { await viewModel.handleSubmit() }
+                // Submit handled via ViewModel
             }
             .disabled(viewState.isSubmitting)
         }
@@ -591,9 +771,9 @@ struct UserUpdatedSignal: PageSignal {
 coordinator.send(signal: UserUpdatedSignal(userId: "123"))
 
 // Receive in ViewModel
-override func handle(signal: ProfilePage.Signal) {
+override func handle(signal: ProfilePage.Signal) async {
     if let signal = signal as? UserUpdatedSignal {
-        Task { await refreshUser(id: signal.userId) }
+        await refreshUser(id: signal.userId)
     }
 }
 ```
@@ -636,6 +816,62 @@ final class OnboardingCoordinator: Coordinator {
         end()
         onComplete?()
     }
+}
+```
+
+---
+
+## View Modifiers
+
+PageKit includes utility view modifiers:
+
+| Modifier | Purpose | Usage |
+|----------|---------|-------|
+| `.fadeIn()` | Fade in animation on appear | `view.fadeIn()` |
+| `.shake(_:count:duration:maxOffset:)` | Shake animation | `view.shake($trigger)` |
+| `.hidden(_:)` | Conditional visibility | `view.hidden(isHidden)` |
+| `.if(_:then:)` | Conditional modifier | `view.if(condition) { $0.opacity(0.5) }` |
+| `.let(_:transform:)` | Unwrap and transform | `view.let(optionalValue) { v, val in ... }` |
+| `.pop(trigger:scale:)` | Pop scale animation | `view.pop(trigger: $trigger)` |
+| `.strikethrough(_:)` | Animated strikethrough | `view.strikethrough(isComplete)` |
+| `.bottomPinned()` | Pin content to bottom | `view.bottomPinned()` |
+| `.onLongPress(_:minimumDuration:)` | Long press gesture | `view.onLongPress { ... }` |
+| `.onSizeChange(_:)` | Size change callback | `view.onSizeChange { size in ... }` |
+
+Example usage:
+
+```swift
+VStack {
+    Text("Hello")
+        .fadeIn()
+
+    Button("Submit") { }
+        .shake($showError, count: 5, duration: 0.3)
+
+    Text("Optional content")
+        .hidden(shouldHide)
+}
+```
+
+---
+
+## Preferences
+
+### KeyboardAdaptability
+
+Control keyboard behavior for views:
+
+```swift
+public struct KeyboardAdaptability: Equatable {
+    public var preventResizing: Bool    // Prevent view resizing
+    public var preventShifting: Bool    // Prevent view shifting
+    public var preventDismissOnTap: Bool // Prevent tap-to-dismiss
+
+    public init(
+        preventResizing: Bool = false,
+        preventShifting: Bool = false,
+        preventDismissOnTap: Bool = false
+    )
 }
 ```
 
