@@ -37,4 +37,13 @@ extension PageEventHandler {
 	public var onRefresh: (() async -> Void)? {
 		_onRefresh
 	}
+
+	/// Convenience method for sending events from synchronous contexts (like SwiftUI views).
+	/// Wraps the async handle call in a Task.
+	@MainActor
+	public func send(_ event: Event) {
+		Task { @MainActor in
+			await handle(event: event)
+		}
+	}
 }
