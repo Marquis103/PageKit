@@ -7,7 +7,6 @@
 import Observation
 
 @Observable
-@MainActor
 open class PageViewState {
 	public var isRefreshing = false
 
