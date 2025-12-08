@@ -346,7 +346,6 @@ open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 Example:
 
 ```swift
-@MainActor
 final class SettingsViewModel: PageViewModel<SettingsPage> {
     override func onStart() async {
         await loadSettings()
@@ -375,7 +374,6 @@ Observable state for the view using Swift's `@Observable` macro:
 
 ```swift
 @Observable
-@MainActor
 open class PageViewState {
     public var isRefreshing = false
 
@@ -387,7 +385,6 @@ Example:
 
 ```swift
 @Observable
-@MainActor
 final class SettingsViewState: PageViewState {
     var username: String = ""
     var notificationsEnabled: Bool = true
@@ -578,7 +575,6 @@ public protocol FormPage: Page where ViewState: FormViewState, ViewModel: FormVi
 
 ```swift
 @Observable
-@MainActor
 open class FormViewState: PageViewState {
     // State properties
     public private(set) var isValid: Bool = false
@@ -684,7 +680,6 @@ final class LoginForm: FormPage {
 
 // ViewState
 @Observable
-@MainActor
 final class LoginViewState: FormViewState {
     var email: String = ""
     var password: String = ""
@@ -697,7 +692,6 @@ final class LoginViewState: FormViewState {
 }
 
 // ViewModel
-@MainActor
 final class LoginViewModel: FormViewModel<LoginForm> {
     private let authService: AuthService
 

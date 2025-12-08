@@ -194,7 +194,6 @@ let viewModelFileContent = """
 
 \(pageType.viewModelImports)
 
-@MainActor
 final class \(name)ViewModel: \(pageType.baseViewModelType)<\(pageFileName)> {
 	override func onStart() async { }
 
@@ -234,7 +233,7 @@ let viewFileContent = """
 struct \(viewTypeName): \(pageType.baseViewProtocol) {
 	enum Event { }
 
-	@ObservedObject var viewState: \(name)ViewState
+	var viewState: \(name)ViewState
 	let handler: \(pageType.eventHandlerType)<Event>
 
 	var body: some View {
