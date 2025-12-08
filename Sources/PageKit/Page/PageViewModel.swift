@@ -16,7 +16,6 @@ public protocol PageViewModelProtocol {
 
 // MARK: - PageViewModel
 
-@MainActor
 open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 	private let coordinator: Coordinating
 	private var signalCancellables: Set<AnyCancellable> = []
