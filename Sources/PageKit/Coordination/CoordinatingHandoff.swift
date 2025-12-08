@@ -8,6 +8,7 @@ import Foundation
 
 // MARK: - CoordinatingHandoff
 
+@MainActor
 public protocol CoordinatingHandoff where Self: Coordinator {
 	associatedtype HandoffStep
 

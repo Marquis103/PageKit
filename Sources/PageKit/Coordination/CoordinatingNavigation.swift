@@ -8,6 +8,7 @@ import UIKit
 
 // MARK: - CoordinatingNavigation
 
+@MainActor
 public protocol CoordinatingNavigation where Self: Coordinator {
 	associatedtype NavigationStep
 

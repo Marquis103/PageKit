@@ -25,6 +25,7 @@ extension CoordinatorDelegate {
 
 // MARK: - Coordinator
 
+@MainActor
 open class Coordinator:
 	NSObject,
 	Coordinating,

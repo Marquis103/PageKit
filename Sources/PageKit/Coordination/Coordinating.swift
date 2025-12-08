@@ -9,6 +9,7 @@ import UIKit
 
 // MARK: - Coordinating
 
+@MainActor
 public protocol Coordinating: CoordinatorDelegate, PageSignalPublisher {
 	var coordinators: [Coordinator?] { get set }
 	var signalPublisher: AnyPublisher<PageSignal, Never> { get }
