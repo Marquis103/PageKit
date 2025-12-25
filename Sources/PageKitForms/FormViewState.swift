@@ -98,28 +98,29 @@ open class FormViewState: PageViewState {
 
 	private func observeFields() {
 		let mirror = Mirror(reflecting: self)
+		let selfPublisher = self.objectWillChange
 
 		for child in mirror.children {
 			if let field = child.value as? FormFieldObservable {
-				let publisher: ObservableObjectPublisher = field.objectWillChange
-				publisher
-					.sink { [weak self] _ in
-						self?.objectWillChange.send()
+				let fieldPublisher: ObservableObjectPublisher = field.objectWillChange
+				fieldPublisher
+					.sink { _ in
+						selfPublisher.send()
 					}
 					.store(in: &singleFieldCancellables)
 			} else if let array = child.value as? [Any] {
-				observeArrayFields(array)
+				observeArrayFields(array, selfPublisher: selfPublisher)
 			}
 		}
 	}
 
-	private func observeArrayFields(_ array: [Any]) {
+	private func observeArrayFields(_ array: [Any], selfPublisher: ObservableObjectPublisher) {
 		for element in array {
 			if let field = element as? FormFieldObservable {
-				let publisher: ObservableObjectPublisher = field.objectWillChange
-				publisher
-					.sink { [weak self] _ in
-						self?.objectWillChange.send()
+				let fieldPublisher: ObservableObjectPublisher = field.objectWillChange
+				fieldPublisher
+					.sink { _ in
+						selfPublisher.send()
 					}
 					.store(in: &arrayFieldCancellables)
 			}
@@ -128,11 +129,12 @@ open class FormViewState: PageViewState {
 
 	private func refreshArrayFieldObservers() {
 		arrayFieldCancellables.removeAll()
+		let selfPublisher = self.objectWillChange
 
 		let mirror = Mirror(reflecting: self)
 		for child in mirror.children {
 			if let array = child.value as? [Any] {
-				observeArrayFields(array)
+				observeArrayFields(array, selfPublisher: selfPublisher)
 			}
 		}
 	}
