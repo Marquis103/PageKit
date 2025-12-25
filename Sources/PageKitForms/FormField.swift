@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - FormFieldObservable
 
 /// Protocol for observable form fields that support validation.
-public protocol FormFieldObservable {
+public protocol FormFieldObservable: AnyObject {
     var objectWillChange: ObservableObjectPublisher { get }
     var isValid: Bool { get }
     func validate()
