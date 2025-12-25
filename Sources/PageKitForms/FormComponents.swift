@@ -6,19 +6,19 @@
 
 import SwiftUI
 
-// MARK: - FormField
+// MARK: - FormTextField
 
 /// A text field with built-in validation support.
 ///
 /// Example:
 /// ```swift
-/// FormField(
+/// FormTextField(
 ///     "Email",
 ///     text: $viewState.email,
 ///     validators: [.required, .email]
 /// )
 /// ```
-public struct FormField: View {
+public struct FormTextField: View {
 	private let title: String
 	@Binding private var text: String
 	private let placeholder: String
@@ -154,8 +154,8 @@ extension FormSubmitButton where Label == Text {
 /// Example:
 /// ```swift
 /// FormSection("Account Information") {
-///     FormField("Email", text: $viewState.email)
-///     FormField("Password", text: $viewState.password, isSecure: true)
+///     FormTextField("Email", text: $viewState.email)
+///     FormTextField("Password", text: $viewState.password, isSecure: true)
 /// }
 /// ```
 public struct FormSection<Content: View>: View {
