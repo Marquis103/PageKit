@@ -77,6 +77,24 @@ open class FormViewState: PageViewState {
 		fields.allSatisfy(\.isValid)
 	}
 
+	/// Validates all discovered FormField properties.
+	///
+	/// This method iterates through all FormField properties found via reflection
+	/// and calls `validate()` on each one. This ensures no fields are missed.
+	///
+	/// Example:
+	/// ```swift
+	/// func handleSubmit() {
+	///     viewState.validateAllFields()
+	///     guard viewState.validated else { return }
+	///     // Proceed with submission...
+	/// }
+	/// ```
+	public func validateAllFields() {
+		for field in fields {
+			field.validate()
+		}
+	}
 
 	// MARK: - Validation
 
