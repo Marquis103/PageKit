@@ -4,7 +4,6 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
-import Combine
 import Foundation
 import SwiftUI
 import PageKit
@@ -78,66 +77,6 @@ open class FormViewState: PageViewState {
 		fields.allSatisfy(\.isValid)
 	}
 
-	// MARK: - Field Observers
-
-	/// Cancellables for single field observers (set once)
-	private var singleFieldCancellables = Set<AnyCancellable>()
-
-	/// Cancellables for array field observers (can be refreshed)
-	private var arrayFieldCancellables = Set<AnyCancellable>()
-
-	public override init() {
-		super.init()
-		observeFields()
-	}
-
-	/// Refreshes array field observers after dynamically modifying array properties.
-	public func refreshFieldObservers() {
-		refreshArrayFieldObservers()
-	}
-
-	private func observeFields() {
-		let mirror = Mirror(reflecting: self)
-		let selfPublisher = self.objectWillChange
-
-		for child in mirror.children {
-			if let field = child.value as? FormFieldObservable {
-				let fieldPublisher: ObservableObjectPublisher = field.objectWillChange
-				fieldPublisher
-					.sink { _ in
-						selfPublisher.send()
-					}
-					.store(in: &singleFieldCancellables)
-			} else if let array = child.value as? [Any] {
-				observeArrayFields(array, selfPublisher: selfPublisher)
-			}
-		}
-	}
-
-	private func observeArrayFields(_ array: [Any], selfPublisher: ObservableObjectPublisher) {
-		for element in array {
-			if let field = element as? FormFieldObservable {
-				let fieldPublisher: ObservableObjectPublisher = field.objectWillChange
-				fieldPublisher
-					.sink { _ in
-						selfPublisher.send()
-					}
-					.store(in: &arrayFieldCancellables)
-			}
-		}
-	}
-
-	private func refreshArrayFieldObservers() {
-		arrayFieldCancellables.removeAll()
-		let selfPublisher = self.objectWillChange
-
-		let mirror = Mirror(reflecting: self)
-		for child in mirror.children {
-			if let array = child.value as? [Any] {
-				observeArrayFields(array, selfPublisher: selfPublisher)
-			}
-		}
-	}
 
 	// MARK: - Validation
 
