@@ -4,6 +4,7 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
+import Combine
 import Foundation
 import SwiftUI
 import PageKit
@@ -42,8 +43,96 @@ open class FormViewState: PageViewState {
 	/// Form-level error message (e.g., API error)
 	public var formError: String?
 
+	// MARK: - FormField Support
+
+	/// Auto-discovers all FormField properties via reflection.
+	///
+	/// This property uses Mirror to find all FormFieldObservable properties
+	/// on the view state, including fields in arrays.
+	public var fields: [FormFieldObservable] {
+		let mirror = Mirror(reflecting: self)
+		var allFields: [FormFieldObservable] = []
+
+		for child in mirror.children {
+			// Handle individual FormFieldObservable properties
+			if let field = child.value as? FormFieldObservable {
+				allFields.append(field)
+			}
+			// Handle array properties
+			else if let array = child.value as? [Any] {
+				for element in array {
+					if let field = element as? FormFieldObservable {
+						allFields.append(field)
+					}
+				}
+			}
+		}
+
+		return allFields
+	}
+
+	/// Whether all FormField properties are valid.
+	///
+	/// Returns true only when every discovered FormField passes validation.
+	public var validated: Bool {
+		fields.allSatisfy(\.isValid)
+	}
+
+	// MARK: - Field Observers
+
+	/// Cancellables for single field observers (set once)
+	private var singleFieldCancellables = Set<AnyCancellable>()
+
+	/// Cancellables for array field observers (can be refreshed)
+	private var arrayFieldCancellables = Set<AnyCancellable>()
+
 	public override init() {
 		super.init()
+		observeFields()
+	}
+
+	/// Refreshes array field observers after dynamically modifying array properties.
+	public func refreshFieldObservers() {
+		refreshArrayFieldObservers()
+	}
+
+	private func observeFields() {
+		let mirror = Mirror(reflecting: self)
+
+		for child in mirror.children {
+			if let field = child.value as? FormFieldObservable {
+				field.objectWillChange
+					.sink { [weak self] in
+						self?.objectWillChange.send()
+					}
+					.store(in: &singleFieldCancellables)
+			} else if let array = child.value as? [Any] {
+				observeArrayFields(array)
+			}
+		}
+	}
+
+	private func observeArrayFields(_ array: [Any]) {
+		for element in array {
+			if let field = element as? FormFieldObservable {
+				field.objectWillChange
+					.sink { [weak self] in
+						self?.objectWillChange.send()
+					}
+					.store(in: &arrayFieldCancellables)
+			}
+		}
+	}
+
+	private func refreshArrayFieldObservers() {
+		arrayFieldCancellables.removeAll()
+
+		let mirror = Mirror(reflecting: self)
+		for child in mirror.children {
+			if let array = child.value as? [Any] {
+				observeArrayFields(array)
+			}
+		}
 	}
 
 	// MARK: - Validation

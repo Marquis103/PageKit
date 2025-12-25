@@ -27,6 +27,39 @@ open class FormViewModel<P: Page>: PageViewModel<P> where P.ViewState: FormViewS
 		viewState
 	}
 
+	// MARK: - Validate and Submit
+
+	/// Validates all FormField properties then submits if valid.
+	///
+	/// This method:
+	/// 1. Iterates through all FormField properties on the view state
+	/// 2. Calls `.validate()` on each field
+	/// 3. If all fields are valid, calls `handleSubmit()`
+	///
+	/// Use this from your view's submit button:
+	/// ```swift
+	/// Button("Submit") {
+	///     viewModel.validateAndSubmit()
+	/// }
+	/// ```
+	public final func validateAndSubmit() {
+		Task {
+			await MainActor.run {
+				for field in viewState.fields {
+					field.validate()
+				}
+			}
+
+			await MainActor.run {
+				if viewState.validated {
+					Task {
+						await handleSubmit()
+					}
+				}
+			}
+		}
+	}
+
 	// MARK: - Form Submission
 
 	/// Submit the form. Override this method to implement submission logic.
