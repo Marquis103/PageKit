@@ -101,7 +101,8 @@ open class FormViewState: PageViewState {
 
 		for child in mirror.children {
 			if let field = child.value as? FormFieldObservable {
-				field.objectWillChange
+				let publisher: ObservableObjectPublisher = field.objectWillChange
+				publisher
 					.sink { [weak self] _ in
 						self?.objectWillChange.send()
 					}
@@ -115,7 +116,8 @@ open class FormViewState: PageViewState {
 	private func observeArrayFields(_ array: [Any]) {
 		for element in array {
 			if let field = element as? FormFieldObservable {
-				field.objectWillChange
+				let publisher: ObservableObjectPublisher = field.objectWillChange
+				publisher
 					.sink { [weak self] _ in
 						self?.objectWillChange.send()
 					}
