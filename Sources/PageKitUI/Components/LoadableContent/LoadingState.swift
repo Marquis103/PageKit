@@ -11,7 +11,11 @@ import Foundation
 /// LoadingState is a generic enum that tracks async data loading operations.
 /// It carries the loaded data directly in the `.loaded` case for type safety.
 ///
-/// Example usage:
+/// **State Distinctions:**
+/// - `.loading` - Initial load, content not yet visible (show spinner, hide content)
+/// - `.disabled` - Content already visible, doing background work (dim content, overlay spinner)
+///
+/// Example usage with data loading:
 /// ```swift
 /// @Observable
 /// class ProductListViewState: PageViewState {
@@ -29,11 +33,32 @@ import Foundation
 ///     }
 /// }
 /// ```
+///
+/// Example usage with form submission (using .disabled):
+/// ```swift
+/// @Observable
+/// class LoginViewState: PageViewState {
+///     var email: String = ""
+///     var password: String = ""
+///     var loadingState: LoadingState<Void, Error> = .idle
+/// }
+///
+/// // In ViewModel
+/// func login() async {
+///     viewState.loadingState = .disabled  // Keep form visible, show overlay
+///     do {
+///         try await authService.login(...)
+///         viewState.loadingState = .loaded(())
+///     } catch {
+///         viewState.loadingState = .failed(error)
+///     }
+/// }
+/// ```
 public enum LoadingState<Content, Failure: Error> {
 	/// Initial state before any loading has occurred
 	case idle
 
-	/// Currently loading data
+	/// Currently loading data (content hidden, show spinner)
 	case loading
 
 	/// Data loaded successfully
@@ -44,6 +69,9 @@ public enum LoadingState<Content, Failure: Error> {
 
 	/// Loading failed with an error
 	case failed(Failure)
+
+	/// Content visible but disabled, with overlay spinner (e.g., form submission)
+	case disabled
 }
 
 // MARK: - Convenience Properties
@@ -76,6 +104,12 @@ extension LoadingState {
 	/// Returns true if data has been loaded successfully
 	public var isLoaded: Bool {
 		if case .loaded = self { return true }
+		return false
+	}
+
+	/// Returns true if in disabled state (content visible with overlay spinner)
+	public var isDisabled: Bool {
+		if case .disabled = self { return true }
 		return false
 	}
 

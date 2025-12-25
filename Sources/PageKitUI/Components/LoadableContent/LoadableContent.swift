@@ -82,6 +82,8 @@ public struct LoadableContent<
 			self.state = .empty
 		case .failed(let error):
 			self.state = .failed(error)
+		case .disabled:
+			self.state = .disabled
 		}
 		self.loadedView = content
 		self.emptyView = empty
@@ -93,7 +95,7 @@ public struct LoadableContent<
 	public var body: some View {
 		Group {
 			switch state {
-			case .idle, .loading:
+			case .idle, .loading, .disabled:
 				loadingView()
 
 			case .loaded(let content):
@@ -121,6 +123,7 @@ public struct LoadableContent<
 		case .loaded: return 2
 		case .empty: return 3
 		case .failed: return 4
+		case .disabled: return 5
 		}
 	}
 }
