@@ -102,7 +102,7 @@ open class FormViewState: PageViewState {
 		for child in mirror.children {
 			if let field = child.value as? FormFieldObservable {
 				field.objectWillChange
-					.sink { [weak self] in
+					.sink { [weak self] _ in
 						self?.objectWillChange.send()
 					}
 					.store(in: &singleFieldCancellables)
@@ -116,7 +116,7 @@ open class FormViewState: PageViewState {
 		for element in array {
 			if let field = element as? FormFieldObservable {
 				field.objectWillChange
-					.sink { [weak self] in
+					.sink { [weak self] _ in
 						self?.objectWillChange.send()
 					}
 					.store(in: &arrayFieldCancellables)
