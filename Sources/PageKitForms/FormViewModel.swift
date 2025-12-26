@@ -7,6 +7,18 @@
 import Foundation
 import PageKit
 
+// MARK: - FormViewModelable
+
+/// Protocol for view models that support form validation and submission.
+///
+/// This protocol defines the contract for form view models, enabling
+/// FormPage to use a protocol constraint instead of a class constraint.
+public protocol FormViewModelable: PageViewModelProtocol {
+	func validateAndSubmit()
+}
+
+// MARK: - FormViewModel
+
 /// Base class for form-specific view models.
 ///
 /// FormViewModel extends PageViewModel with form-specific functionality
@@ -28,7 +40,7 @@ import PageKit
 ///     }
 /// }
 /// ```
-open class FormViewModel<P: Page>: PageViewModel<P>, FormViewEventHandlable where P.ViewState: FormViewState {
+open class FormViewModel<P: Page>: PageViewModel<P>, FormViewModelable, FormViewEventHandlable where P.ViewState: FormViewState {
 	/// Typed access to the form view state
 	public var formViewState: P.ViewState {
 		viewState

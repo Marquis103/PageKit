@@ -33,7 +33,7 @@ import PageKit
 ///     }
 /// }
 /// ```
-public protocol FormPage: Page where ViewState: FormViewState, ViewModel: FormViewModel<Self> {
+public protocol FormPage: Page where ViewState: FormViewState, ViewModel: FormViewModelable {
 	// Inherits all Page requirements with FormViewState constraint
 }
 
