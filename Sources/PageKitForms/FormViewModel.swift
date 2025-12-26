@@ -7,41 +7,41 @@
 import Foundation
 import PageKit
 
-/// Protocol for form-specific view models.
+/// Base class for form-specific view models.
 ///
 /// FormViewModel extends PageViewModel with form-specific functionality
-/// such as submission and validation.
+/// such as validation and submission.
 ///
 /// Example:
 /// ```swift
-/// class LoginFormViewModel: FormViewModel<LoginFormPage> {
-///     override func submit() async throws {
-///         let credentials = (email: viewState.email, password: viewState.password)
-///         try await authService.login(credentials)
+/// final class LoginFormViewModel: FormViewModel<LoginFormPage>, FormViewEventHandlable {
+///     override func submit() async {
+///         formViewState.beginSubmission()
+///         do {
+///             let credentials = (email: viewState.email.value, password: viewState.password.value)
+///             let user = try await authService.login(credentials)
+///             formViewState.endSubmission()
+///             coordinate(action: .loginSuccess(user))
+///         } catch {
+///             formViewState.handleSubmissionError(error)
+///         }
 ///     }
 /// }
 /// ```
-open class FormViewModel<P: Page>: PageViewModel<P> where P.ViewState: FormViewState {
+open class FormViewModel<P: Page>: PageViewModel<P>, FormViewEventHandlable where P.ViewState: FormViewState {
 	/// Typed access to the form view state
 	public var formViewState: P.ViewState {
 		viewState
 	}
 
-	// MARK: - Validate and Submit
+	// MARK: - FormViewEventHandlable
 
 	/// Validates all FormField properties then submits if valid.
 	///
 	/// This method:
 	/// 1. Iterates through all FormField properties on the view state
 	/// 2. Calls `.validate()` on each field
-	/// 3. If all fields are valid, calls `handleSubmit()`
-	///
-	/// Use this from your view's submit button:
-	/// ```swift
-	/// Button("Submit") {
-	///     viewModel.validateAndSubmit()
-	/// }
-	/// ```
+	/// 3. If all fields are valid, calls `submit()`
 	public final func validateAndSubmit() {
 		Task {
 			await MainActor.run {
@@ -53,7 +53,7 @@ open class FormViewModel<P: Page>: PageViewModel<P> where P.ViewState: FormViewS
 			await MainActor.run {
 				if viewState.validated {
 					Task {
-						await handleSubmit()
+						await submit()
 					}
 				}
 			}
@@ -64,56 +64,24 @@ open class FormViewModel<P: Page>: PageViewModel<P> where P.ViewState: FormViewS
 
 	/// Submit the form. Override this method to implement submission logic.
 	///
-	/// This method is called when the user submits the form. It should:
-	/// 1. Validate the form
-	/// 2. Call the API or perform the submission action
-	/// 3. Handle success/failure
-	///
-	/// The base implementation validates the form and throws an error if invalid.
+	/// This method is called when all fields are valid. Override in subclass
+	/// to implement your submission logic.
 	///
 	/// Example:
 	/// ```swift
-	/// override func submit() async throws {
-	///     let credentials = (
-	///         email: formViewState.email,
-	///         password: formViewState.password
-	///     )
-	///     try await authService.login(credentials)
-	///     coordinator.send(action: .loginSuccess)
+	/// override func submit() async {
+	///     formViewState.beginSubmission()
+	///     do {
+	///         try await authService.login(email: viewState.email.value, password: viewState.password.value)
+	///         formViewState.endSubmission()
+	///         coordinate(action: .loginSuccess)
+	///     } catch {
+	///         formViewState.handleSubmissionError(error)
+	///     }
 	/// }
 	/// ```
-	open func submit() async throws {
-		// Validate before submitting
-		guard formViewState.validate() else {
-			throw FormError.validationFailed
-		}
-
+	open func submit() async {
 		// Override in subclass to implement submission logic
-	}
-
-	/// Handle form submission with automatic state management.
-	///
-	/// This is a convenience method that:
-	/// 1. Sets `isSubmitting = true`
-	/// 2. Calls your `submit()` implementation
-	/// 3. Sets `isSubmitting = false` when done
-	/// 4. Handles errors by setting `formError`
-	///
-	/// Use this from your view's submit button:
-	/// ```swift
-	/// FormSubmitButton("Login") {
-	///     await viewModel.handleSubmit()
-	/// }
-	/// ```
-	public func handleSubmit() async {
-		formViewState.beginSubmission()
-
-		do {
-			try await submit()
-			formViewState.endSubmission()
-		} catch {
-			formViewState.handleSubmissionError(error)
-		}
 	}
 
 	// MARK: - Validation
