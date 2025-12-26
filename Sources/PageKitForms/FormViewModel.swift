@@ -40,9 +40,9 @@ public protocol FormViewModelable: PageViewModelProtocol {
 ///     }
 /// }
 /// ```
-open class FormViewModel<P: Page>: PageViewModel<P>, FormViewModelable, FormViewEventHandlable where P.ViewState: FormViewState {
+open class FormViewModel<F: FormPage>: PageViewModel<F>, FormViewModelable, FormViewEventHandlable {
 	/// Typed access to the form view state
-	public var formViewState: P.ViewState {
+	public var formViewState: F.ViewState {
 		viewState
 	}
 
