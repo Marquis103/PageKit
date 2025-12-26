@@ -7,6 +7,10 @@
 import Foundation
 import PageKit
 
+#if canImport(UIKit)
+import UIKit
+#endif
+
 // MARK: - FormViewEventHandlable
 
 /// Protocol for form-specific event handlers.
@@ -51,8 +55,29 @@ public struct FormViewEventHandler<Event> {
 	}
 
 	/// Validates all form fields and submits if valid.
+	///
+	/// This method:
+	/// 1. Dismisses the keyboard (resignFirstResponder)
+	/// 2. Calls the underlying ViewModel's validateAndSubmit()
 	public func validateAndSubmit() {
+		resignFirstResponder()
 		_validateAndSubmit()
+	}
+
+	// MARK: - Private Helpers
+
+	/// Dismisses the keyboard by resigning the first responder.
+	private func resignFirstResponder() {
+		#if canImport(UIKit)
+		DispatchQueue.main.async {
+			UIApplication.shared.sendAction(
+				#selector(UIResponder.resignFirstResponder),
+				to: nil,
+				from: nil,
+				for: nil
+			)
+		}
+		#endif
 	}
 }
 

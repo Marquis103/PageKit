@@ -4,14 +4,13 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
-import Combine
+import Observation
 import SwiftUI
 
 // MARK: - FormFieldObservable
 
 /// Protocol for observable form fields that support validation.
 public protocol FormFieldObservable: AnyObject {
-    var objectWillChange: ObservableObjectPublisher { get }
     var isValid: Bool { get }
     func validate()
 }
@@ -29,7 +28,8 @@ public protocol FormFieldObservable: AnyObject {
 ///     .validator({ !$0.isEmpty }, "Email is required")
 ///     .validator({ $0.contains("@") }, "Invalid email format")
 /// ```
-public class FormField<Value>: FormFieldObservable, ObservableObject {
+@Observable
+public class FormField<Value>: FormFieldObservable {
 
     // MARK: - Types
 
@@ -40,18 +40,15 @@ public class FormField<Value>: FormFieldObservable, ObservableObject {
         message: String
     )
 
-    // MARK: - Published Properties
+    // MARK: - Observable Properties
 
     /// The current value of the field.
-    @Published
     public var value: Value
 
     /// Whether the field is currently valid.
-    @Published
     public private(set) var isValid: Bool = true
 
     /// The validation error message, if any.
-    @Published
     public private(set) var validationMessage: String?
 
     // MARK: - Properties

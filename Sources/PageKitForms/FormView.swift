@@ -7,10 +7,6 @@
 import SwiftUI
 import PageKit
 
-#if canImport(UIKit)
-import UIKit
-#endif
-
 // MARK: - FormView
 
 /// Protocol for views that contain forms.
@@ -47,9 +43,8 @@ public protocol FormView: PageView where State: FormViewState {
 extension FormView {
 	/// Validates all form fields and submits if valid.
 	///
-	/// This method:
-	/// 1. Dismisses the keyboard (resignFirstResponder)
-	/// 2. Calls the handler's validateAndSubmit()
+	/// This method dismisses the keyboard and validates/submits via the handler.
+	/// The handler internally handles keyboard dismissal and ViewModel validation.
 	///
 	/// Use this from submit buttons:
 	/// ```swift
@@ -58,21 +53,6 @@ extension FormView {
 	/// }
 	/// ```
 	public func validateAndSubmit() {
-		resignFirstResponder()
 		handler.validateAndSubmit()
-	}
-
-	/// Dismisses the keyboard by resigning the first responder.
-	private func resignFirstResponder() {
-		#if canImport(UIKit)
-		DispatchQueue.main.async {
-			UIApplication.shared.sendAction(
-				#selector(UIResponder.resignFirstResponder),
-				to: nil,
-				from: nil,
-				for: nil
-			)
-		}
-		#endif
 	}
 }
