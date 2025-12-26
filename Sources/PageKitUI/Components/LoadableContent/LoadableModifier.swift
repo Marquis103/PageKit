@@ -45,40 +45,20 @@ public struct LoadableModifier<StateContent, Failure: Error>: ViewModifier {
 		self.onRetry = onRetry
 	}
 
+	// MARK: - State Properties
+
+	private var isDisabled: Bool { state.isDisabled }
+	private var isLoading: Bool { state.isLoading || state.isIdle }
+	private var isEmpty: Bool { state.isEmpty }
+	private var isFailed: Bool { state.isFailed }
+
+	// MARK: - Body
+
 	public func body(content: Content) -> some View {
-		Group {
-			switch state {
-			case .idle, .loading:
-				// Hide content, show loading spinner
-				content
-					.hidden()
-					.overlay {
-						DefaultLoadingStateView()
-					}
-
-			case .loaded:
-				// Show content normally
-				content
-
-			case .empty:
-				// Hide content, show empty state
-				content
-					.hidden()
-					.overlay {
-						DefaultEmptyStateView { await retry() }
-					}
-
-			case .failed(let error):
-				// Hide content, show error state
-				content
-					.hidden()
-					.overlay {
-						DefaultErrorStateView(error: error) { await retry() }
-					}
-
-			case .disabled:
-				// Show content with overlay spinner (form submission, etc.)
-				content
+		content
+			// Disabled state: show content dimmed with spinner overlay
+			.if(isDisabled) { view in
+				view
 					.disabled(true)
 					.overlay {
 						ZStack {
@@ -89,8 +69,40 @@ public struct LoadableModifier<StateContent, Failure: Error>: ViewModifier {
 						}
 					}
 			}
+			// Loading state: hide content, show spinner
+			.if(isLoading) { view in
+				view
+					.hidden()
+					.overlay {
+						DefaultLoadingStateView()
+					}
+			}
+			// Empty state: hide content, show empty view
+			.if(isEmpty) { view in
+				view
+					.hidden()
+					.overlay {
+						DefaultEmptyStateView { await retry() }
+					}
+			}
+			// Failed state: hide content, show error view
+			.if(isFailed) { view in
+				view
+					.hidden()
+					.overlay {
+						errorOverlay
+					}
+			}
+			.animation(.easeInOut(duration: 0.2), value: stateKey)
+	}
+
+	// MARK: - Private Helpers
+
+	@ViewBuilder
+	private var errorOverlay: some View {
+		if case .failed(let error) = state {
+			DefaultErrorStateView(error: error) { await retry() }
 		}
-		.animation(.easeInOut(duration: 0.2), value: stateKey)
 	}
 
 	private func retry() async {
@@ -106,6 +118,31 @@ public struct LoadableModifier<StateContent, Failure: Error>: ViewModifier {
 		case .empty: return 3
 		case .failed: return 4
 		case .disabled: return 5
+		}
+	}
+}
+
+// MARK: - Conditional View Modifier
+
+extension View {
+	/// Conditionally applies a transformation to the view
+	///
+	/// This modifier preserves view identity when the condition is false,
+	/// which is essential for proper SwiftUI state management and animations.
+	///
+	/// - Parameters:
+	///   - condition: Whether to apply the transformation
+	///   - transform: The transformation to apply when condition is true
+	/// - Returns: Either the transformed view or the original view
+	@ViewBuilder
+	func `if`<Transform: View>(
+		_ condition: Bool,
+		transform: (Self) -> Transform
+	) -> some View {
+		if condition {
+			transform(self)
+		} else {
+			self
 		}
 	}
 }
