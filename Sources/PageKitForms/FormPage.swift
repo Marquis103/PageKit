@@ -37,15 +37,6 @@ public protocol FormPage: Page where ViewState: FormViewState, ViewModel: FormVi
 	// Inherits all Page requirements with FormViewState constraint
 }
 
-// MARK: - FormView
-
-/// Protocol for form-based content views.
-///
-/// FormView is a specialization of PageView that works with FormViewState.
-public protocol FormView: PageView where State: FormViewState {
-	// Inherits all PageView requirements with FormViewState constraint
-}
-
 // MARK: - FormEventHandler
 
 /// Event handler for form views.
