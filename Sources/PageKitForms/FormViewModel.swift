@@ -55,19 +55,13 @@ open class FormViewModel<F: FormPage>: PageViewModel<F>, FormViewModelable, Form
 	/// 2. Calls `.validate()` on each field
 	/// 3. If all fields are valid, calls `submit()`
 	public final func validateAndSubmit() {
-		Task {
-			await MainActor.run {
-				for field in viewState.fields {
-					field.validate()
-				}
-			}
+		for field in viewState.fields {
+			field.validate()
+		}
 
-			await MainActor.run {
-				if viewState.validated {
-					Task {
-						await submit()
-					}
-				}
+		if viewState.validated {
+			Task {
+				await submit()
 			}
 		}
 	}
