@@ -122,32 +122,8 @@ public struct LoadableModifier<StateContent, Failure: Error>: ViewModifier {
 	}
 }
 
-// MARK: - Conditional View Modifier
-
-extension View {
-	/// Conditionally applies a transformation to the view
-	///
-	/// This modifier preserves view identity when the condition is false,
-	/// which is essential for proper SwiftUI state management and animations.
-	///
-	/// - Parameters:
-	///   - condition: Whether to apply the transformation
-	///   - transform: The transformation to apply when condition is true
-	/// - Returns: Either the transformed view or the original view
-	@ViewBuilder
-	func `if`<Transform: View>(
-		_ condition: Bool,
-		transform: (Self) -> Transform
-	) -> some View {
-		if condition {
-			transform(self)
-		} else {
-			self
-		}
-	}
-}
-
 // MARK: - View Extension
+// Note: Uses .if() modifier from PageKit/Modifiers/IfModifier.swift
 
 extension View {
 	/// Apply loadable state handling to any view
