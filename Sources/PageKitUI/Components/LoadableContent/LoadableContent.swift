@@ -7,115 +7,71 @@
 import SwiftUI
 import PageKitTheming
 
-/// A container view that manages loading, loaded, empty, and error states
+/// A container view that manages loading, loaded, empty, error, and disabled states
 ///
-/// LoadableContent renders different views based on the current `LoadingState`.
-/// It provides sensible defaults but allows full customization via ViewBuilder closures.
+/// LoadableContent wraps your content and applies the appropriate overlay based on state.
+/// Unlike a ViewModifier, this wrapper view uses `@Binding` for proper state observation.
 ///
-/// Basic usage with defaults:
+/// **Key Behaviors:**
+/// - `.idle`, `.loading` → Content hidden, spinner shown (initial load)
+/// - `.loaded(Content)` → Content visible
+/// - `.empty` → Content hidden, empty state shown
+/// - `.failed(Error)` → Content hidden, error state shown
+/// - `.disabled` → Content visible but dimmed with overlay spinner (form submission)
+///
+/// Basic usage:
 /// ```swift
-/// LoadableContent(state: viewState.productsState) { products in
-///     ForEach(products) { product in
-///         ProductRow(product: product)
-///     }
-/// } onRetry: {
-///     await handler.onRefresh?()
+/// var body: some View {
+///     MyFormContent()
+///         .loadable($viewState.loadingState)
 /// }
 /// ```
-///
-/// Full customization:
-/// ```swift
-/// LoadableContent(state: viewState.productsState) { products in
-///     ProductList(products: products)
-/// } empty: { retry in
-///     CustomEmptyView(onRetry: retry)
-/// } error: { error, retry in
-///     CustomErrorView(error: error, onRetry: retry)
-/// } loading: {
-///     CustomLoadingView()
-/// } onRetry: {
-///     await viewModel.refresh()
-/// }
-/// ```
-public struct LoadableContent<
-	Content,
-	LoadedView: View,
-	EmptyStateView: View,
-	ErrorStateView: View,
-	LoadingStateView: View
->: View {
-	private let state: LoadingState<Content, any Error>
-	private let loadedView: (Content) -> LoadedView
-	private let emptyView: (@escaping () async -> Void) -> EmptyStateView
-	private let errorView: (Error, @escaping () async -> Void) -> ErrorStateView
-	private let loadingView: () -> LoadingStateView
-	private let onRetry: (() async -> Void)?
+public struct LoadableContent<StateContent, Failure: Error, Content: View>: View {
+	@Binding var state: LoadingState<StateContent, Failure>
+	let content: Content
+	let onRetry: (() async -> Void)?
+
+	@State private var animatedState: LoadingState<StateContent, Failure>
 
 	@Environment(\.optionalTheme)
 	private var theme: AnyTheme?
 
-	/// Creates a LoadableContent view with full customization
-	/// - Parameters:
-	///   - state: The current loading state
-	///   - content: ViewBuilder for the loaded content
-	///   - empty: ViewBuilder for the empty state (receives retry closure)
-	///   - error: ViewBuilder for the error state (receives error and retry closure)
-	///   - loading: ViewBuilder for the loading state
-	///   - onRetry: Optional async closure to call when retrying
-	public init<F: Error>(
-		state: LoadingState<Content, F>,
-		@ViewBuilder content: @escaping (Content) -> LoadedView,
-		@ViewBuilder empty: @escaping (@escaping () async -> Void) -> EmptyStateView,
-		@ViewBuilder error: @escaping (Error, @escaping () async -> Void) -> ErrorStateView,
-		@ViewBuilder loading: @escaping () -> LoadingStateView,
-		onRetry: (() async -> Void)? = nil
+	public init(
+		state: Binding<LoadingState<StateContent, Failure>>,
+		onRetry: (() async -> Void)? = nil,
+		@ViewBuilder content: () -> Content
 	) {
-		// Type-erase the error to allow any Error type
-		switch state {
-		case .idle:
-			self.state = .idle
-		case .loading:
-			self.state = .loading
-		case .loaded(let content):
-			self.state = .loaded(content)
-		case .empty:
-			self.state = .empty
-		case .failed(let error):
-			self.state = .failed(error)
-		case .disabled:
-			self.state = .disabled
-		}
-		self.loadedView = content
-		self.emptyView = empty
-		self.errorView = error
-		self.loadingView = loading
+		_state = state
+		_animatedState = State(initialValue: state.wrappedValue)
+		self.content = content()
 		self.onRetry = onRetry
 	}
 
-	public var body: some View {
-		Group {
-			switch state {
-			case .idle, .loading, .disabled:
-				loadingView()
+	// MARK: - State Properties
 
-			case .loaded(let content):
-				loadedView(content)
+	private var isDisabled: Bool {
+		if case .disabled = animatedState { return true }
+		return false
+	}
 
-			case .empty:
-				emptyView(retry)
-
-			case .failed(let error):
-				errorView(error, retry)
-			}
+	private var isLoading: Bool {
+		switch animatedState {
+		case .idle, .loading: return true
+		default: return false
 		}
-		.animation(.easeInOut(duration: 0.2), value: stateKey)
 	}
 
-	private func retry() async {
-		await onRetry?()
+	private var isEmpty: Bool {
+		if case .empty = animatedState { return true }
+		return false
 	}
 
-	/// Key for animation - changes when state type changes
+	private var isFailed: Bool {
+		if case .failed = animatedState { return true }
+		return false
+	}
+
+	/// Key for animation - changes when state case changes
 	private var stateKey: Int {
 		switch state {
 		case .idle: return 0
@@ -126,33 +82,86 @@ public struct LoadableContent<
 		case .disabled: return 5
 		}
 	}
+
+	// MARK: - Body
+
+	public var body: some View {
+		content
+			// Disabled state: show content dimmed with spinner overlay
+			.if(isDisabled) { view in
+				view
+					.disabled(true)
+					.overlay {
+						ZStack {
+							Color.black.opacity(0.5)
+								.ignoresSafeArea()
+							ProgressView()
+								.tint(.white)
+								.scaleEffect(1.5)
+						}
+					}
+			}
+			// Loading state: hide content, show spinner
+			.if(isLoading) { view in
+				view
+					.hidden()
+					.overlay {
+						DefaultLoadingStateView()
+					}
+			}
+			// Empty state: hide content, show empty view
+			.if(isEmpty) { view in
+				view
+					.hidden()
+					.overlay {
+						DefaultEmptyStateView { await onRetry?() }
+					}
+			}
+			// Failed state: hide content, show error view
+			.if(isFailed) { view in
+				view
+					.hidden()
+					.overlay {
+						if case .failed(let error) = animatedState {
+							DefaultErrorStateView(error: error) { await onRetry?() }
+						}
+					}
+			}
+			.onChange(of: stateKey) { _, _ in
+				withAnimation(.easeInOut(duration: 0.2)) {
+					animatedState = state
+				}
+			}
+	}
 }
 
-// MARK: - Convenience Initializer with Default Views
+// MARK: - View Extension
 
-extension LoadableContent where
-	EmptyStateView == DefaultEmptyStateView,
-	ErrorStateView == DefaultErrorStateView,
-	LoadingStateView == DefaultLoadingStateView
-{
-	/// Creates a LoadableContent view with default loading, empty, and error views
+extension View {
+	/// Apply loadable state handling to any view
+	///
+	/// This modifier wraps your view and applies the appropriate overlay based on state.
+	/// Uses a `Binding` for proper state observation and transitions.
+	///
 	/// - Parameters:
-	///   - state: The current loading state
-	///   - content: ViewBuilder for the loaded content
-	///   - onRetry: Optional async closure to call when retrying
-	public init<F: Error>(
-		state: LoadingState<Content, F>,
-		@ViewBuilder content: @escaping (Content) -> LoadedView,
+	///   - state: Binding to the current loading state
+	///   - onRetry: Optional async closure called when retry is triggered
+	/// - Returns: A view that responds to loading state changes
+	///
+	/// **Usage:**
+	/// ```swift
+	/// var body: some View {
+	///     LoginForm(...)
+	///         .loadable($viewState.loadingState)
+	/// }
+	/// ```
+	public func loadable<StateContent, Failure: Error>(
+		_ state: Binding<LoadingState<StateContent, Failure>>,
 		onRetry: (() async -> Void)? = nil
-	) {
-		self.init(
-			state: state,
-			content: content,
-			empty: { retry in DefaultEmptyStateView(onRetry: retry) },
-			error: { error, retry in DefaultErrorStateView(error: error, onRetry: retry) },
-			loading: { DefaultLoadingStateView() },
-			onRetry: onRetry
-		)
+	) -> some View {
+		LoadableContent(state: state, onRetry: onRetry) {
+			self
+		}
 	}
 }
 
