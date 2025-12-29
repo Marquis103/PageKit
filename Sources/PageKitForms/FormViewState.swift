@@ -13,8 +13,12 @@ import PageKit
 /// FormViewState provides infrastructure for managing form validation state,
 /// field-level errors, and submission state. Subclass this for any form-based page.
 ///
+/// - Important: The `@Observable` macro does not inherit through class inheritance.
+///   Subclasses must also add `@Observable` to be properly observable.
+///
 /// Example:
 /// ```swift
+/// @Observable
 /// class LoginFormViewState: FormViewState {
 ///     var email = ""
 ///     var password = ""
@@ -26,6 +30,7 @@ import PageKit
 ///     }
 /// }
 /// ```
+@Observable
 open class FormViewState: PageViewState {
 	/// Whether the entire form is valid
 	public private(set) var isValid: Bool = false
