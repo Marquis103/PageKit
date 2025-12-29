@@ -10,7 +10,8 @@ import PageKitTheming
 /// A container view that manages loading, loaded, empty, error, and disabled states
 ///
 /// LoadableContent wraps your content and applies the appropriate overlay based on state.
-/// Unlike a ViewModifier, this wrapper view uses `@Binding` for proper state observation.
+/// Accepts a plain value (not Binding) to ensure proper `@Observable` tracking - the caller
+/// must READ the property, which establishes observation.
 ///
 /// **Key Behaviors:**
 /// - `.idle`, `.loading` → Content hidden, spinner shown (initial load)
@@ -23,11 +24,11 @@ import PageKitTheming
 /// ```swift
 /// var body: some View {
 ///     MyFormContent()
-///         .loadable($viewState.loadingState)
+///         .loadable(viewState.loadingState)  // Direct read establishes observation
 /// }
 /// ```
 public struct LoadableContent<StateContent, Failure: Error, Content: View>: View {
-	@Binding var state: LoadingState<StateContent, Failure>
+	let state: LoadingState<StateContent, Failure>
 	let content: Content
 	let onRetry: (() async -> Void)?
 
@@ -37,12 +38,12 @@ public struct LoadableContent<StateContent, Failure: Error, Content: View>: View
 	private var theme: AnyTheme?
 
 	public init(
-		state: Binding<LoadingState<StateContent, Failure>>,
+		state: LoadingState<StateContent, Failure>,
 		onRetry: (() async -> Void)? = nil,
 		@ViewBuilder content: () -> Content
 	) {
-		_state = state
-		_animatedState = State(initialValue: state.wrappedValue)
+		self.state = state
+		_animatedState = State(initialValue: state)
 		self.content = content()
 		self.onRetry = onRetry
 	}
@@ -141,10 +142,11 @@ extension View {
 	/// Apply loadable state handling to any view
 	///
 	/// This modifier wraps your view and applies the appropriate overlay based on state.
-	/// Uses a `Binding` for proper state observation and transitions.
+	/// Accepts a plain value (not Binding) to ensure proper `@Observable` tracking.
+	/// When the caller reads `viewState.loadingState`, observation is established.
 	///
 	/// - Parameters:
-	///   - state: Binding to the current loading state
+	///   - state: The current loading state value (read directly, not as Binding)
 	///   - onRetry: Optional async closure called when retry is triggered
 	/// - Returns: A view that responds to loading state changes
 	///
@@ -152,11 +154,11 @@ extension View {
 	/// ```swift
 	/// var body: some View {
 	///     LoginForm(...)
-	///         .loadable($viewState.loadingState)
+	///         .loadable(viewState.loadingState)  // Direct read establishes observation
 	/// }
 	/// ```
 	public func loadable<StateContent, Failure: Error>(
-		_ state: Binding<LoadingState<StateContent, Failure>>,
+		_ state: LoadingState<StateContent, Failure>,
 		onRetry: (() async -> Void)? = nil
 	) -> some View {
 		LoadableContent(state: state, onRetry: onRetry) {
