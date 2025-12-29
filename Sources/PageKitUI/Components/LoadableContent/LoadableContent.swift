@@ -5,6 +5,7 @@
 //
 
 import SwiftUI
+import PageKit
 import PageKitTheming
 
 /// A container view that manages loading, loaded, empty, error, and disabled states
@@ -96,9 +97,8 @@ public struct LoadableContent<StateContent, Failure: Error, Content: View>: View
 						ZStack {
 							Color.black.opacity(0.5)
 								.ignoresSafeArea()
-							ProgressView()
-								.tint(.white)
-								.scaleEffect(1.5)
+							LoadingSpinner()
+								.frame(width: 40, height: 40)
 						}
 					}
 			}
@@ -174,7 +174,8 @@ public struct DefaultLoadingStateView: View {
 	public init() {}
 
 	public var body: some View {
-		ProgressView()
+		LoadingSpinner()
+			.frame(width: 32, height: 32)
 			.frame(maxWidth: .infinity, maxHeight: .infinity)
 	}
 }
