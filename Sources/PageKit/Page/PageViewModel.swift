@@ -30,16 +30,39 @@ open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 		subscribeToSignals(coordinator)
 	}
 
-	// MARK: - Lifecycle
+	// MARK: - Lifecycle (Sync)
 
+	/// Called synchronously when the page starts. Use for immediate UI updates.
+	/// Data loading should spawn its own Task to avoid blocking the main actor.
+	open func onStartSync() {
+		// Override
+	}
+
+	/// Called synchronously when the page resumes. Use for immediate UI updates.
+	open func onResumeSync() {
+		// Override
+	}
+
+	/// Called synchronously when the page pauses. Use for immediate cleanup.
+	open func onPauseSync() {
+		// Override
+	}
+
+	// MARK: - Lifecycle (Async)
+
+	/// Called after `onStartSync()`. Can be used for awaited operations.
+	/// Note: Awaiting here blocks other @MainActor tasks. Prefer spawning
+	/// independent Tasks in `onStartSync()` for non-blocking behavior.
 	open func onStart() async {
 		// Override
 	}
 
+	/// Called after `onResumeSync()`. Can be used for awaited operations.
 	open func onResume() async {
 		// Override
 	}
 
+	/// Called after `onPauseSync()`. Can be used for awaited operations.
 	open func onPause() async {
 		// Override
 	}

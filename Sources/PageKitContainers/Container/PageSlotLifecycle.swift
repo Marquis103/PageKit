@@ -27,15 +27,17 @@ public final class PageSlotLifecycle<P: Page>: ObservableObject {
 
 	/// Called when the slot's view appears.
 	///
-	/// On first appearance, calls `onStart()`. On subsequent appearances,
-	/// calls `onResume()`.
+	/// On first appearance, calls `onStartSync()` then `onStart()`. On subsequent appearances,
+	/// calls `onResumeSync()` then `onResume()`.
 	public func handleAppear() {
 		if !hasStarted {
 			hasStarted = true
+			page.viewModel.onStartSync()
 			Task {
 				await page.viewModel.onStart()
 			}
 		} else {
+			page.viewModel.onResumeSync()
 			Task {
 				await page.viewModel.onResume()
 			}
@@ -44,8 +46,9 @@ public final class PageSlotLifecycle<P: Page>: ObservableObject {
 
 	/// Called when the slot's view disappears.
 	///
-	/// Calls `onPause()` to allow the ViewModel to pause any ongoing work.
+	/// Calls `onPauseSync()` then `onPause()` to allow the ViewModel to pause any ongoing work.
 	public func handleDisappear() {
+		page.viewModel.onPauseSync()
 		Task {
 			await page.viewModel.onPause()
 		}

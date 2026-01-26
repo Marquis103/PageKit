@@ -98,6 +98,7 @@ public class PageHostController<P: Page>: UIViewController, PageController {
 	}
 
 	public func start() {
+		pageViewModel.onStartSync()
 		Task {
 			await pageViewModel.onStart()
 		}
@@ -105,6 +106,7 @@ public class PageHostController<P: Page>: UIViewController, PageController {
 
 	public func resume() {
 		if !isInitialViewDidAppear {
+			pageViewModel.onResumeSync()
 			Task {
 				await pageViewModel.onResume()
 			}
@@ -114,6 +116,7 @@ public class PageHostController<P: Page>: UIViewController, PageController {
 	}
 
 	public func pause() {
+		pageViewModel.onPauseSync()
 		Task {
 			await pageViewModel.onPause()
 		}
