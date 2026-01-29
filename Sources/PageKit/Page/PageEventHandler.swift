@@ -41,12 +41,7 @@ extension PageEventHandler {
 	/// Convenience method for sending events from synchronous contexts (like SwiftUI views).
 	/// Wraps the async handle call in a Task.
 	public func send(_ event: Event) {
-		let sendTime = CFAbsoluteTimeGetCurrent()
-		print("[EVENT] send() called")
-		Task { @MainActor in
-			let taskStartTime = CFAbsoluteTimeGetCurrent()
-			let delay = taskStartTime - sendTime
-			print("[EVENT] Task started after \(String(format: "%.3f", delay))s")
+		Task(priority: .userInitiated) { @MainActor in
 			await handle(event: event)
 		}
 	}
