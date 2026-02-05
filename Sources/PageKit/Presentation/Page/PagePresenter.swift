@@ -11,6 +11,9 @@ public struct PagePresenter<Content: View>: View {
 	public let content: Content
 
 	@State
+	private var navigation: Navigation?
+
+	@State
 	private var onboarding: Onboarding?
 
 	@State
@@ -39,6 +42,9 @@ public struct PagePresenter<Content: View>: View {
 				.onPreferenceChange(OnboardingPreferenceKey.self) { newValue in
 					onboarding = newValue
 				}
+				.onPreferenceChange(NavigationPreferenceKey.self) { newValue in
+					navigation = newValue
+				}
 
 		let keyboardAdaptedContent =
 			preferenceKeyContent
@@ -66,22 +72,46 @@ public struct PagePresenter<Content: View>: View {
 				}
 
 		keyboardAdaptedContent
-			.navigationBarTitleDisplayMode(.inline)
+			.navigationBarTitleDisplayMode(navigation?.titleDisplayMode ?? .inline)
 			.toolbar {
-				ToolbarItemGroup(placement: .navigationBarLeading) {
-					let rewindStyle = rewinder.rewindStyle
-					let rewind = rewinder.rewind ?? {}
+				// Title (principal placement)
+				ToolbarItemGroup(placement: .principal) {
+					if let title = navigation?.title {
+						Text(title)
+							.font(.headline)
+					}
+				}
 
-					if rewindStyle == .cancel {
-						Button("Cancel", action: rewind)
-					} else if rewindStyle == .chevron {
-						Button(action: rewind) {
-							Image(systemName: "chevron.left")
+				// Leading buttons: auto back button + custom leading buttons
+				ToolbarItemGroup(placement: .navigationBarLeading) {
+					// Auto back button from rewinder (unless disabled)
+					if navigation?.disableRewind != true {
+						let rewindStyle = rewinder.rewindStyle
+						let rewind = rewinder.rewind ?? {}
+
+						if rewindStyle == .cancel {
+							Button("Cancel", action: rewind)
+						} else if rewindStyle == .chevron {
+							Button(action: rewind) {
+								Image(systemName: "chevron.left")
+							}
+						} else if rewindStyle == .x {
+							Button(action: rewind) {
+								Image(systemName: "xmark")
+							}
 						}
-					} else if rewindStyle == .x {
-						Button(action: rewind) {
-							Image(systemName: "xmark")
-						}
+					}
+
+					// Custom leading buttons
+					ForEach(navigation?.leadingButtons ?? []) { button in
+						button
+					}
+				}
+
+				// Trailing buttons
+				ToolbarItemGroup(placement: .navigationBarTrailing) {
+					ForEach(navigation?.trailingButtons ?? []) { button in
+						button
 					}
 				}
 			}
@@ -90,7 +120,11 @@ public struct PagePresenter<Content: View>: View {
 					if #available(iOS 16.0, *) {
 						NavigationStack {
 							view
-								.toolbarBackground(.hidden, for: .navigationBar)
+								.if(navigation != nil) {
+									$0.toolbarBackground(navigation?.backgroundVisibility ?? .automatic, for: .navigationBar)
+								} else: {
+									$0.toolbarBackground(.hidden, for: .navigationBar)
+								}
 						}
 					} else {
 						NavigationView {
