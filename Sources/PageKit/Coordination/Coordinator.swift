@@ -180,12 +180,62 @@ open class Coordinator:
 		endIfNeeded()
 	}
 
+	// MARK: - Window Hierarchy Resolution
+
+	/// Resolves a view controller suitable for presenting content.
+	/// If this coordinator's active controller is not in the window hierarchy,
+	/// walks up the delegate chain to find a parent coordinator whose active
+	/// VC is in the window. Falls back to the key window's root VC.
+	private func resolveActiveController() -> UIViewController {
+		let own = activeNavigationController ?? activeViewController
+		if own.view.window != nil { return own }
+
+		var current: CoordinatorDelegate? = delegate
+		while let parentDelegate = current {
+			if let parent = parentDelegate as? Coordinator {
+				let parentVC = parent.activeNavigationController ?? parent.activeViewController
+				if parentVC.view.window != nil { return parentVC }
+				current = parent.delegate
+			} else {
+				break
+			}
+		}
+
+		if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+		   let root = scene.keyWindow?.rootViewController {
+			return root
+		}
+
+		return own
+	}
+
+	/// Resolves a navigation controller suitable for push navigation.
+	/// Same hierarchy-walking logic as resolveActiveController but returns
+	/// a UINavigationController specifically.
+	private func resolveNavigationController() -> UINavigationController? {
+		if let nav = activeNavigationController, nav.view.window != nil {
+			return nav
+		}
+
+		var current: CoordinatorDelegate? = delegate
+		while let parentDelegate = current {
+			if let parent = parentDelegate as? Coordinator {
+				if let nav = parent.activeNavigationController, nav.view.window != nil {
+					return nav
+				}
+				current = parent.delegate
+			} else {
+				break
+			}
+		}
+
+		return activeNavigationController
+	}
+
 	// MARK: Navigation
 
 	public func navigate(to viewController: UIViewController, with action: NavigationAction) {
 		willStartIfNeeded()
-
-		let activeController = activeNavigationController ?? activeViewController
 
 		switch action {
 			case let .push(rewindStyle):
@@ -193,8 +243,9 @@ open class Coordinator:
 
 				configure(rewindStyle: rewindStyle, to: viewController)
 
-				activeNavigationController?.delegate = self
-				activeNavigationController?.pushViewController(viewController, animated: true)
+				let navController = resolveNavigationController()
+				navController?.delegate = self
+				navController?.pushViewController(viewController, animated: true)
 			case let .present(rewindStyle, transition):
 				configure(rewindStyle: rewindStyle, to: viewController)
 
@@ -206,7 +257,7 @@ open class Coordinator:
 					navigationController.modalTransitionStyle = transition
 				}
 
-				activeController.present(navigationController, animated: true, completion: didStartCompletion)
+				resolveActiveController().present(navigationController, animated: true, completion: didStartCompletion)
 			case .sheet:
 				// Set sheet delegate for interactive dismissal handling
 				if #available(iOS 15.0, *),
@@ -215,22 +266,21 @@ open class Coordinator:
 					// Use type erasure to set delegate
 					setSheetDelegate(for: viewController)
 				}
-				activeController.present(viewController, animated: true, completion: didStartCompletion)
+				resolveActiveController().present(viewController, animated: true, completion: didStartCompletion)
 			case .modal:
-				activeController.present(viewController, animated: true, completion: didStartCompletion)
+				resolveActiveController().present(viewController, animated: true, completion: didStartCompletion)
 			case .system:
-				activeController.present(viewController, animated: true, completion: didStartCompletion)
+				resolveActiveController().present(viewController, animated: true, completion: didStartCompletion)
 			case .none:
 				didStartCompletion?()
 			case .window:
 				viewController.loadViewIfNeeded()
 				didStartCompletion?()
 			case .container:
-				// Container navigation is handled by pushing the container view controller
-				// The container manages its own slot content internally
 				viewController.hidesBottomBarWhenPushed = true
-				activeNavigationController?.delegate = self
-				activeNavigationController?.pushViewController(viewController, animated: true)
+				let navController = resolveNavigationController()
+				navController?.delegate = self
+				navController?.pushViewController(viewController, animated: true)
 		}
 
 		let historyItem = CoordinatorHistoryItem(
