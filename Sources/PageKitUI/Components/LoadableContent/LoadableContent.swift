@@ -21,16 +21,45 @@ import PageKitTheming
 /// - `.failed(Error)` → Content hidden, error state shown
 /// - `.disabled` → Content visible but dimmed with overlay spinner (form submission)
 ///
-/// Basic usage:
+/// **Customization:**
+/// LoadableContent is parameterized over the empty / error view types so callers can
+/// inject brand-disciplined views without subclassing or styling-by-environment. The
+/// default initializer uses `DefaultEmptyStateView` / `DefaultErrorStateView`. The
+/// custom-slot initializer (and the `.loadable(state:onRetry:emptyView:errorView:)`
+/// modifier) lets the caller pass `@ViewBuilder` closures for either slot.
+///
+/// Basic usage (default views):
 /// ```swift
 /// var body: some View {
 ///     MyFormContent()
-///         .loadable(viewState.loadingState)  // Direct read establishes observation
+///         .loadable(viewState.loadingState)
 /// }
 /// ```
-public struct LoadableContent<StateContent, Failure: Error, Content: View>: View {
+///
+/// Custom views (host app's branded placeholders):
+/// ```swift
+/// var body: some View {
+///     MyFormContent()
+///         .loadable(viewState.loadingState, onRetry: viewModel.retry) {
+///             BrandedEmptyView(...)
+///         } errorView: { error in
+///             BrandedErrorView(error: error, ...)
+///         }
+/// }
+/// ```
+public struct LoadableContent<
+	StateContent,
+	Failure: Error,
+	Content: View,
+	LoadingContent: View,
+	EmptyContent: View,
+	ErrorContent: View
+>: View {
 	let state: LoadingState<StateContent, Failure>
 	let content: Content
+	let loadingContent: () -> LoadingContent
+	let emptyContent: () -> EmptyContent
+	let errorContent: (Failure) -> ErrorContent
 	let onRetry: (() async -> Void)?
 
 	@State private var animatedState: LoadingState<StateContent, Failure>
@@ -38,14 +67,25 @@ public struct LoadableContent<StateContent, Failure: Error, Content: View>: View
 	@Environment(\.optionalTheme)
 	private var theme: AnyTheme?
 
+	/// Designated initializer — fully custom loading / empty / error
+	/// views. Each slot is independent: pass `EmptyView()` from any
+	/// builder to suppress that state's affordance entirely (useful
+	/// when, e.g., the host page surrounds the loadable region with
+	/// its own loading skeleton and doesn't want PageKit's spinner).
 	public init(
 		state: LoadingState<StateContent, Failure>,
 		onRetry: (() async -> Void)? = nil,
-		@ViewBuilder content: () -> Content
+		@ViewBuilder content: () -> Content,
+		@ViewBuilder loadingContent: @escaping () -> LoadingContent,
+		@ViewBuilder emptyContent: @escaping () -> EmptyContent,
+		@ViewBuilder errorContent: @escaping (Failure) -> ErrorContent
 	) {
 		self.state = state
 		_animatedState = State(initialValue: state)
 		self.content = content()
+		self.loadingContent = loadingContent
+		self.emptyContent = emptyContent
+		self.errorContent = errorContent
 		self.onRetry = onRetry
 	}
 
@@ -102,12 +142,12 @@ public struct LoadableContent<StateContent, Failure: Error, Content: View>: View
 						}
 					}
 			}
-			// Loading state: hide content, show spinner
+			// Loading state: hide content, show loading view
 			.if(isLoading) { view in
 				view
 					.hidden()
 					.overlay {
-						DefaultLoadingStateView()
+						loadingContent()
 					}
 			}
 			// Empty state: hide content, show empty view
@@ -115,7 +155,7 @@ public struct LoadableContent<StateContent, Failure: Error, Content: View>: View
 				view
 					.hidden()
 					.overlay {
-						DefaultEmptyStateView { await onRetry?() }
+						emptyContent()
 					}
 			}
 			// Failed state: hide content, show error view
@@ -124,7 +164,7 @@ public struct LoadableContent<StateContent, Failure: Error, Content: View>: View
 					.hidden()
 					.overlay {
 						if case .failed(let error) = animatedState {
-							DefaultErrorStateView(error: error) { await onRetry?() }
+							errorContent(error)
 						}
 					}
 			}
@@ -136,34 +176,136 @@ public struct LoadableContent<StateContent, Failure: Error, Content: View>: View
 	}
 }
 
-// MARK: - View Extension
+// MARK: - Default-View Convenience
 
-extension View {
-	/// Apply loadable state handling to any view
-	///
-	/// This modifier wraps your view and applies the appropriate overlay based on state.
-	/// Accepts a plain value (not Binding) to ensure proper `@Observable` tracking.
-	/// When the caller reads `viewState.loadingState`, observation is established.
+/// When the caller doesn't provide custom slots, all three state
+/// views fall back to the framework defaults. The `where` clause
+/// specializes the generic parameters so callers don't have to
+/// write them out.
+public extension LoadableContent
+where LoadingContent == DefaultLoadingStateView,
+	  EmptyContent == DefaultEmptyStateView,
+	  ErrorContent == DefaultErrorStateView {
+
+	/// Convenience initializer using the default loading / empty /
+	/// error views. Preserves the v1 LoadableContent call shape; any
+	/// caller written against `init(state:onRetry:content:)` keeps
+	/// working unchanged.
+	init(
+		state: LoadingState<StateContent, Failure>,
+		onRetry: (() async -> Void)? = nil,
+		@ViewBuilder content: () -> Content
+	) {
+		self.init(
+			state: state,
+			onRetry: onRetry,
+			content: content,
+			loadingContent: { DefaultLoadingStateView() },
+			emptyContent: {
+				DefaultEmptyStateView { await onRetry?() }
+			},
+			errorContent: { error in
+				DefaultErrorStateView(error: error) { await onRetry?() }
+			}
+		)
+	}
+}
+
+// MARK: - View Extensions
+
+public extension View {
+
+	/// Apply loadable state handling with the framework's default
+	/// empty / error views. Shorter call shape for cases where the
+	/// app is happy with PageKit's defaults.
 	///
 	/// - Parameters:
-	///   - state: The current loading state value (read directly, not as Binding)
-	///   - onRetry: Optional async closure called when retry is triggered
-	/// - Returns: A view that responds to loading state changes
-	///
-	/// **Usage:**
-	/// ```swift
-	/// var body: some View {
-	///     LoginForm(...)
-	///         .loadable(viewState.loadingState)  // Direct read establishes observation
-	/// }
-	/// ```
-	public func loadable<StateContent, Failure: Error>(
+	///   - state: The current loading state value (read directly,
+	///     not as Binding — the read establishes `@Observable`
+	///     tracking).
+	///   - onRetry: Optional async closure called when retry is
+	///     triggered.
+	/// - Returns: A view that responds to loading state changes.
+	func loadable<StateContent, Failure: Error>(
 		_ state: LoadingState<StateContent, Failure>,
 		onRetry: (() async -> Void)? = nil
 	) -> some View {
 		LoadableContent(state: state, onRetry: onRetry) {
 			self
 		}
+	}
+
+	/// Apply loadable state handling with caller-supplied empty
+	/// and error views. Loading falls back to PageKit's default
+	/// spinner — use the four-slot overload below to customize
+	/// loading too. Use this overload when the host app needs
+	/// branded placeholders (different copy, icons, layout) than
+	/// PageKit's neutral defaults.
+	///
+	/// The empty view is built unconditionally; the error view
+	/// receives the typed `Failure` so it can render different
+	/// copy per error case (e.g., `.notFound` vs `.unavailable`).
+	///
+	/// - Parameters:
+	///   - state: The current loading state value.
+	///   - onRetry: Optional async closure called when retry is
+	///     triggered. If your custom views call retry themselves,
+	///     pass `nil` here and wire the closure inside the slot
+	///     bodies.
+	///   - emptyView: View shown for `.empty` state.
+	///   - errorView: View shown for `.failed`, given the error.
+	/// - Returns: A view that responds to loading state changes.
+	func loadable<StateContent, Failure: Error, EmptyContent: View, ErrorContent: View>(
+		_ state: LoadingState<StateContent, Failure>,
+		onRetry: (() async -> Void)? = nil,
+		@ViewBuilder emptyView: @escaping () -> EmptyContent,
+		@ViewBuilder errorView: @escaping (Failure) -> ErrorContent
+	) -> some View {
+		LoadableContent(
+			state: state,
+			onRetry: onRetry,
+			content: { self },
+			loadingContent: { DefaultLoadingStateView() },
+			emptyContent: emptyView,
+			errorContent: errorView
+		)
+	}
+
+	/// Apply loadable state handling with all three state views
+	/// custom. Use this when the host page renders its own loading
+	/// skeleton (or wants no loading affordance — pass
+	/// `EmptyView()` to suppress).
+	///
+	/// - Parameters:
+	///   - state: The current loading state value.
+	///   - onRetry: Optional async closure called when retry is
+	///     triggered.
+	///   - loadingView: View shown for `.idle` / `.loading` states.
+	///     Pass `EmptyView()` for invisible loading.
+	///   - emptyView: View shown for `.empty` state.
+	///   - errorView: View shown for `.failed`, given the error.
+	/// - Returns: A view that responds to loading state changes.
+	func loadable<
+		StateContent,
+		Failure: Error,
+		LoadingContent: View,
+		EmptyContent: View,
+		ErrorContent: View
+	>(
+		_ state: LoadingState<StateContent, Failure>,
+		onRetry: (() async -> Void)? = nil,
+		@ViewBuilder loadingView: @escaping () -> LoadingContent,
+		@ViewBuilder emptyView: @escaping () -> EmptyContent,
+		@ViewBuilder errorView: @escaping (Failure) -> ErrorContent
+	) -> some View {
+		LoadableContent(
+			state: state,
+			onRetry: onRetry,
+			content: { self },
+			loadingContent: loadingView,
+			emptyContent: emptyView,
+			errorContent: errorView
+		)
 	}
 }
 
