@@ -123,7 +123,16 @@ public struct PagePresenter<Content: View>: View {
 								.if(navigation != nil) {
 									$0.toolbarBackground(navigation?.backgroundVisibility ?? .automatic, for: .navigationBar)
 								} else: {
-									$0.toolbarBackground(.hidden, for: .navigationBar)
+									// Pages that opt out of `.navigation(...)` draw their own
+									// custom header. `.toolbarBackground(.hidden)` alone
+									// would only hide the chrome — the NavigationStack would
+									// still reserve the toolbar's vertical space (~44pt),
+									// pushing the custom header below the safe-area edge.
+									// Hiding the toolbar entirely reclaims that space, so the
+									// page's first-row content sits flush at the top.
+									$0
+										.toolbarBackground(.hidden, for: .navigationBar)
+										.toolbar(.hidden, for: .navigationBar)
 								}
 						}
 					} else {
