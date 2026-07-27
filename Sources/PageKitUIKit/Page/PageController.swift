@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import PageKitCore
 import UIKit
 
 public protocol PageController<P>: UIViewController {

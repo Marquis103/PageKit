@@ -4,7 +4,7 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
-import Combine
+import PageKitCore
 import UIKit
 
 // MARK: - CoordinatorDelegate
@@ -29,6 +29,7 @@ extension CoordinatorDelegate {
 open class Coordinator:
 	NSObject,
 	Coordinating,
+	CoordinatorDelegate,
 	CoordinatingAction,
 	SheetControllerDelegate
 {
@@ -45,14 +46,14 @@ open class Coordinator:
 	/// Navigation history of this coordinator
 	public var history: [CoordinatorHistoryItem] = []
 
-	/// Private subject for page signal publishing
-	private lazy var _signalPublisher = PassthroughSubject<PageSignal, Never>()
+	/// Multicast bus for page signal publishing (AsyncStream since 2.0.0).
+	private let signalBus = PageSignalBus()
 
 	private var didStartCompletion: (() -> Void)?
 
-	/// Publicly exposed read-only access to the signal publisher
-	public var signalPublisher: AnyPublisher<PageSignal, Never> {
-		_signalPublisher.eraseToAnyPublisher()
+	/// One independent signal stream per subscriber (PageSignalPublisher).
+	public func signals() -> AsyncStream<PageSignal> {
+		signalBus.stream()
 	}
 
 	public var activeNavigationController: UINavigationController? {
@@ -373,7 +374,7 @@ open class Coordinator:
 	// MARK: - PageSignalPublisher
 
 	public func send(signal: PageSignal) {
-		_signalPublisher.send(signal)
+		signalBus.send(signal)
 	}
 }
 

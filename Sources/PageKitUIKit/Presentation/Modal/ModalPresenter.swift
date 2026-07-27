@@ -4,6 +4,7 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
+import PageKitCore
 import SwiftUI
 
 public struct ModalPresenter<Content: View>: View {

@@ -4,6 +4,7 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
+import PageKitCore
 import UIKit
 
 /// Configuration for sheet presentation using UISheetPresentationController
