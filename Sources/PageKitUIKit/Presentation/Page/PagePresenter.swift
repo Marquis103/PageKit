@@ -4,6 +4,7 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
+import PageKitCore
 import SwiftUI
 
 public struct PagePresenter<Content: View>: View {

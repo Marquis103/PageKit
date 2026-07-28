@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import PageKitCore
 
 public protocol CoordinatingAction where Self: Coordinator {
 	func coordinate(action: CoordinatableAction)

@@ -4,8 +4,6 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
-import Combine
-
 // MARK: - PageViewModelProtocol
 
 public protocol PageViewModelProtocol {
@@ -19,7 +17,12 @@ public protocol PageViewModelProtocol {
 @MainActor
 open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 	private let coordinator: Coordinating
-	private var signalCancellables: Set<AnyCancellable> = []
+
+	/// Iterates the coordinator's signal stream for this page's lifetime.
+	/// Since 2.0.0 (PE-533) signals arrive via `AsyncStream`, not Combine —
+	/// the task ends when the stream finishes or the model deallocates
+	/// (`[weak self]` + explicit cancel in `deinit`).
+	private var signalTask: Task<Void, Never>?
 
 	public let viewState: P.ViewState
 
@@ -28,6 +31,10 @@ open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 		self.viewState = viewState
 
 		subscribeToSignals(coordinator)
+	}
+
+	deinit {
+		signalTask?.cancel()
 	}
 
 	// MARK: - Lifecycle (Sync)
@@ -92,16 +99,14 @@ open class PageViewModel<P: Page>: PageViewModelProtocol, PageEventHandlable {
 	// MARK: - Signal Subscription
 
 	private func subscribeToSignals(_ publisher: some PageSignalPublisher) {
-		publisher.signalPublisher
-			.sink { [weak self] signal in
-				guard let self else { return }
+		let stream = publisher.signals()
+		signalTask = Task { @MainActor [weak self] in
+			for await signal in stream {
+				guard self != nil else { return }
 				if let signal = signal as? P.Signal {
-					Task { @MainActor [weak self] in
-						guard let self else { return }
-						await self.handle(signal: signal)
-					}
+					await self?.handle(signal: signal)
 				}
 			}
-			.store(in: &signalCancellables)
+		}
 	}
 }

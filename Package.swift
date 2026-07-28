@@ -9,7 +9,22 @@ let package = Package(
         .iOS(.v17)  // All packages require iOS 17+ for @Observable support
     ],
     products: [
-        // Core page system with coordination and navigation
+        // Portable page system — no UIKit, no Combine (PE-533 split).
+        // The Android-compatible core: Page family, view state/model,
+        // events, CoordinatableAction, Coordinating, AsyncStream signals.
+        .library(
+            name: "PageKitCore",
+            targets: ["PageKitCore"]
+        ),
+        // UIKit coordination + hosting: Coordinator base, NavigationAction,
+        // host/sheet/modal controllers. iOS-only half of the split.
+        .library(
+            name: "PageKitUIKit",
+            targets: ["PageKitUIKit"]
+        ),
+        // Core page system with coordination and navigation.
+        // Since 2.0.0 this is an umbrella re-exporting PageKitCore +
+        // PageKitUIKit, so existing consumers compile unchanged.
         .library(
             name: "PageKit",
             targets: ["PageKit"]
@@ -41,10 +56,24 @@ let package = Package(
         ),
     ],
     targets: [
-        // Core page system - standalone, no dependencies
+        // Portable core — the split's whole point is this target staying
+        // free of UIKit and Combine (grep-gated by PageKitCoreTests).
+        .target(
+            name: "PageKitCore",
+            dependencies: [],
+            path: "Sources/PageKitCore"
+        ),
+        // UIKit half — depends on Core for the portable contracts.
+        .target(
+            name: "PageKitUIKit",
+            dependencies: ["PageKitCore"],
+            path: "Sources/PageKitUIKit"
+        ),
+        // Umbrella shim: @_exported re-exports of Core + UIKit. Keeps the
+        // `PageKit` product/module name every consumer already imports.
         .target(
             name: "PageKit",
-            dependencies: [],
+            dependencies: ["PageKitCore", "PageKitUIKit"],
             path: "Sources/PageKit"
         ),
         // Theming system - standalone, no dependencies
@@ -78,6 +107,10 @@ let package = Package(
             path: "Sources/PageFramework"
         ),
         // Tests
+        .testTarget(
+            name: "PageKitCoreTests",
+            dependencies: ["PageKitCore"]
+        ),
         .testTarget(
             name: "PageKitTests",
             dependencies: ["PageKit"]

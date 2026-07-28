@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import PageKitCore
 import UIKit
 
 public struct CoordinatorHistoryItem: Equatable {
