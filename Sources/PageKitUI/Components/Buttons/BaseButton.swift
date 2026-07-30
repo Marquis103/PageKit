@@ -129,7 +129,9 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 						.textSize(.custom(buttonSize.textSize))
 						.textColor(style.contentColor)
 						.lineLimit(1)
+						#if !os(Android)  // PE-536/E4: SkipSwiftUI lacks truncationMode
 						.truncationMode(.tail)
+						#endif
 
 					if let trailingIcon {
 						trailingIcon
