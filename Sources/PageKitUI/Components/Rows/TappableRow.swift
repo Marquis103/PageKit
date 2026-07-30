@@ -45,7 +45,9 @@ public struct TappableRow<Content: View>: View {
 	public var body: some View {
 		Button(action: action) {
 			content()
-				.pkContentShape()
+				#if !os(Android)
+				.contentShape(Rectangle())
+				#endif
 		}
 		.buttonStyle(.plain)
 		.disabled(isDisabled)

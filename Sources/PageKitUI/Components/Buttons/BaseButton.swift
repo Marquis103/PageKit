@@ -139,7 +139,9 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 				.padding(buttonSize.contentPadding)
 				.frame(maxWidth: .infinity)
 				.background(style.backgroundColor)
-				.pkContentShape()
+				#if !os(Android)
+				.contentShape(Rectangle())
+				#endif
 			}
 		)
 		.buttonStyle(PlainButtonStyle())
