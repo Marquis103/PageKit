@@ -1,3 +1,5 @@
+// PE-536/E4 spike/android: generic constraints unsupported by skipstone; unused by the E4 closure.
+#if !os(Android)
 //
 //  List.swift
 //
@@ -219,4 +221,6 @@ private struct PreviewItem: Identifiable {
 	}
 }
 #endif
+#endif
+
 #endif

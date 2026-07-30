@@ -20,7 +20,7 @@ public struct ExternalizedState<Value>: DynamicProperty {
 	}
 
 	@ObservedObject
-	var observableValue: ObservableValue<Value>
+	private var observableValue: ObservableValue<Value>
 
 	public var wrappedValue: Value {
 		get { observableValue.value }
