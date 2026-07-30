@@ -14,12 +14,6 @@ import PageKitTheming
 @Observable
 private final class ButtonThrottler {
 	private(set) var isThrottling = false
-#else
-@MainActor
-private final class ButtonThrottler: ObservableObject {
-	@Published
-	private(set) var isThrottling = false
-#endif
 
 	func throttle(
 		interval: Double = 0.5,
@@ -33,6 +27,25 @@ private final class ButtonThrottler: ObservableObject {
 		isThrottling = false
 	}
 }
+#else
+@MainActor
+private final class ButtonThrottler: ObservableObject {
+	@Published
+	private(set) var isThrottling = false
+
+	func throttle(
+		interval: Double = 0.5,
+		action: @escaping () -> Void
+	) async {
+		guard !isThrottling else { return }
+		isThrottling = true
+		action()
+		let nanoseconds = interval * Double(1_000_000_000)
+		try? await Task.sleep(nanoseconds: UInt64(nanoseconds))
+		isThrottling = false
+	}
+}
+#endif
 
 /// The base button component that all styled buttons are built upon
 ///
@@ -61,8 +74,9 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 	private var isEnabled
 
 	#if os(Android)
-	@State
-	private var throttler: ButtonThrottler = .init()
+	// PE-536/E4 spike: plain storage — @Observable reads still drive updates;
+	// per-body re-init means throttle state doesn't persist (spike caveat).
+	private let throttler: ButtonThrottler = .init()
 	#else
 	@StateObject
 	private var throttler: ButtonThrottler = .init()
