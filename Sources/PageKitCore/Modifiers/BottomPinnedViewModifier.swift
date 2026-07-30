@@ -1,3 +1,6 @@
+// PE-536/E4 spike/android: bridge codegen can't handle a modifier whose generic
+// param shadows ViewModifier.Content; unused by the E4 closure — Darwin-only.
+#if !os(Android)
 //
 //  BottomPinnedViewModifier.swift
 //
@@ -18,7 +21,7 @@ struct BottomPinnedViewModifier<Content: View>: ViewModifier {  // PE-536/E4: in
 		self.pinnedContent = pinnedContent()
 	}
 
-	func body(content: Content) -> some View {
+	func body(content: Self.Content) -> some View {
 		ZStack {
 			content
 				.padding(.bottom, pinnedContentHeight)
@@ -45,3 +48,5 @@ extension View {
 		modifier(BottomPinnedViewModifier(pinnedContent: pinnedContent))
 	}
 }
+
+#endif
