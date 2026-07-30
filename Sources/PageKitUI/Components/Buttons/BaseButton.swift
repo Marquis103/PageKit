@@ -8,10 +8,18 @@ import SwiftUI
 import PageKitTheming
 
 /// Throttler utility for button click rate limiting
+#if os(Android)
+// PE-536/E4 spike/android: Fuse-native has Observation but not ObservableObject.
+@MainActor
+@Observable
+private final class ButtonThrottler {
+	private(set) var isThrottling = false
+#else
 @MainActor
 private final class ButtonThrottler: ObservableObject {
 	@Published
 	private(set) var isThrottling = false
+#endif
 
 	func throttle(
 		interval: Double = 0.5,
@@ -52,8 +60,13 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 	@Environment(\.isEnabled)
 	private var isEnabled
 
+	#if os(Android)
+	@State
+	private var throttler: ButtonThrottler = .init()
+	#else
 	@StateObject
 	private var throttler: ButtonThrottler = .init()
+	#endif
 
 	/// Creates a base button with the specified configuration
 	/// - Parameters:
@@ -112,7 +125,7 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 				.padding(buttonSize.contentPadding)
 				.frame(maxWidth: .infinity)
 				.background(style.backgroundColor)
-				.contentShape(Rectangle())
+				.pkContentShape()
 			}
 		)
 		.buttonStyle(PlainButtonStyle())
