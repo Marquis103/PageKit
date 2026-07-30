@@ -6,7 +6,12 @@ import PackageDescription
 let package = Package(
     name: "PageKit",
     platforms: [
-        .iOS(.v17)  // All packages require iOS 17+ for @Observable support
+        .iOS(.v17), .macOS(.v14)  // PE-536/E4 spike: macOS for skip host builds
+    ],
+    dependencies: [
+        // PE-536/E4 spike/android: SkipFuseUI's product carries a target named
+        // `SwiftUI` when TARGET_OS_ANDROID=1 — the mapping for `import SwiftUI`.
+        .package(url: "https://source.skip.tools/skip-fuse-ui.git", from: "1.0.0"),
     ],
     products: [
         // Portable page system — no UIKit, no Combine (PE-533 split).
