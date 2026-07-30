@@ -59,6 +59,7 @@ let package = Package(
         // PE-536/E4 spike/android: SkipFuseUI's product carries a target named
         // `SwiftUI` when TARGET_OS_ANDROID=1 — the mapping for `import SwiftUI`.
         .package(url: "https://source.skip.tools/skip-fuse-ui.git", from: "1.0.0"),
+        .package(url: "https://source.skip.tools/skip.git", from: "1.9.4"),
     ],
     targets: [
         // Portable core — the split's whole point is this target staying
@@ -67,7 +68,8 @@ let package = Package(
             name: "PageKitCore",
             dependencies: [
                 .product(name: "SkipFuseUI", package: "skip-fuse-ui"),],
-            path: "Sources/PageKitCore"
+            path: "Sources/PageKitCore",
+            plugins: [.plugin(name: "skipstone", package: "skip")]
         ),
         // UIKit half — depends on Core for the portable contracts.
         .target(
@@ -87,7 +89,8 @@ let package = Package(
             name: "PageKitTheming",
             dependencies: [
                 .product(name: "SkipFuseUI", package: "skip-fuse-ui"),],
-            path: "Sources/PageKitTheming"
+            path: "Sources/PageKitTheming",
+            plugins: [.plugin(name: "skipstone", package: "skip")]
         ),
         // UI components - depends on theming and core (for PageEventHandler)
         .target(
@@ -97,7 +100,8 @@ let package = Package(
                 "PageKitTheming",
                 "PageKitCore",  // PE-536/E4 spike: umbrella (UIKit half) detached for Android
             ],
-            path: "Sources/PageKitUI"
+            path: "Sources/PageKitUI",
+            plugins: [.plugin(name: "skipstone", package: "skip")]
         ),
         // Form system - depends on core
         .target(
