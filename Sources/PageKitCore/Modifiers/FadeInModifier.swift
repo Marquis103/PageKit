@@ -8,7 +8,7 @@ import SwiftUI
 
 // MARK: - FadeInModifier
 
-private struct FadeInModifier: Animatable, ViewModifier {
+struct FadeInModifier: Animatable, ViewModifier {
 	@AnimatedState
 	private var opacity: CGFloat = 0
 

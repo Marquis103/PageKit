@@ -1,3 +1,4 @@
-# PE-536/E4 spike: skipstone processing for SwiftUI composition glue.
+# PE-536/E4 spike: skipstone processing for SwiftUI composition (bridging false — native-consumed only).
 skip:
   mode: 'native'
+  bridging: false
