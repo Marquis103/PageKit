@@ -1,3 +1,5 @@
+// PE-536/E4 spike/android: @StateObject/contentShape gaps — simple onTapGesture variant (double-tap throttle caveat recorded).
+#if !os(Android)
 //
 //  OnTapModifier.swift
 //
@@ -63,3 +65,16 @@ extension View {
 		)
 	}
 }
+
+#else
+import SwiftUI
+
+extension View {
+	public func onTap(
+		interval: Double = 0.5,
+		action: @escaping () -> Void
+	) -> some View {
+		onTapGesture { action() }
+	}
+}
+#endif

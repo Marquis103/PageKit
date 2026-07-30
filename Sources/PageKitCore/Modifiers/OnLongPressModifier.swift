@@ -1,3 +1,5 @@
+// PE-536/E4 spike/android: Gesture.sequenced unavailable — basic onLongPressGesture variant.
+#if !os(Android)
 //
 //  OnLongPressModifier.swift
 //
@@ -35,3 +37,20 @@ extension View {
 		)
 	}
 }
+
+#else
+import Foundation
+import SwiftUI
+
+extension View {
+	public func onLongPress(
+		gestureState: GestureState<Bool>,
+		minimumDuration: Double = 0.5,
+		completion: @escaping () -> Void
+	) -> some View {
+		onLongPressGesture(minimumDuration: minimumDuration) {
+			completion()
+		}
+	}
+}
+#endif

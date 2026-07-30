@@ -17,6 +17,7 @@ public enum ThemeFontWeight {
 	case extraBold
 	case black
 
+#if canImport(UIKit)
 	public var uiFontWeight: UIFont.Weight {
 		switch self {
 			case .light: .light
@@ -27,6 +28,7 @@ public enum ThemeFontWeight {
 			case .black: .black
 		}
 	}
+#endif
 
 	public var swiftUIWeight: Font.Weight {
 		switch self {

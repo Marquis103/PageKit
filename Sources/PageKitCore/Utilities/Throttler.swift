@@ -1,3 +1,5 @@
+// PE-536/E4 spike/android: ObservableObject → @Observable variant for Android.
+#if !os(Android)
 //
 //  Throttler.swift
 //
@@ -46,3 +48,24 @@ public final class Throttler: ObservableObject {
 		isThrottling = false
 	}
 }
+
+#else
+import Foundation
+import Observation
+import SwiftUI
+
+@Observable
+public final class Throttler {
+	private var lastFire: Date = .distantPast
+
+	public init() {}
+
+	@MainActor
+	public func throttle(interval: Double, action: @MainActor () -> Void) async {
+		let now = Date()
+		guard now.timeIntervalSince(lastFire) >= interval else { return }
+		lastFire = now
+		action()
+	}
+}
+#endif

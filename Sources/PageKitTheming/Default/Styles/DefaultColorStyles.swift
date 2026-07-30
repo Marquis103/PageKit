@@ -6,6 +6,12 @@
 
 import SwiftUI
 
+// PE-536/E4 spike/android: UIColor-backed system grays don't exist in SkipSwiftUI.
+#if os(Android)
+private let pkSystemGray5 = Color(red: 0.898, green: 0.898, blue: 0.918)
+private let pkSystemGray6 = Color(red: 0.949, green: 0.949, blue: 0.969)
+#endif
+
 // MARK: - DefaultTextColors
 
 public struct DefaultTextColors: TextColorsProviding {
