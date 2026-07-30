@@ -39,7 +39,7 @@ struct BottomPinnedViewModifier<Content: View>: ViewModifier {  // PE-536/E4: in
 }
 
 extension View {
-	public func bottomPinnedView(
+	func bottomPinnedView(  // PE-536/E4: internal — bridge codegen limitation on @ViewBuilder params
 		@ViewBuilder _ pinnedContent: @escaping () -> some View
 	) -> some View {
 		modifier(BottomPinnedViewModifier(pinnedContent: pinnedContent))
