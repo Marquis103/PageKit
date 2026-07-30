@@ -14,9 +14,27 @@ PageKit provides the foundational components for building modular iOS applicatio
 - **Forms**: Built-in form handling with validation and submission
 - **View Modifiers**: Animation and layout utilities
 
+### Modules
+
+As of 2.0.0 the page system is split along a portability seam:
+
+| Module | Depends on | Contents |
+|--------|-----------|----------|
+| `PageKitCore` | — | The portable page system: `Page`, `PageView`, `PageViewModel`, `PageViewState`, `PageEventHandler`, `CoordinatableAction`, `PageSignal`, and the `Coordinating` contract. **Contains no UIKit and no Combine**, enforced by a test. |
+| `PageKitUIKit` | `PageKitCore` | The platform layer: `Coordinator`, `NavigationAction`, `CoordinatingNavigation`, `PageController`, and the host/sheet/modal presentation stack. |
+| `PageKit` | both | Umbrella that `@_exported import`s both halves. This is what most consumers import. |
+| `PageKitTheming` | — | Protocol-based theming. |
+| `PageKitUI` | `PageKitTheming`, `PageKit` | Buttons, icons, text, and other components. |
+| `PageKitForms` | `PageKit` | Form handling with validation and submission. |
+| `PageKitContainers` | `PageKit` | Multi-page container layouts for iPad. |
+| `PageFramework` | all of the above | Convenience umbrella over the whole framework. |
+
+The `PageKitCore` split exists so the page system can be ported to non-Apple platforms;
+keeping it free of UIKit and Combine is a deliberate constraint, not an accident.
+
 ## Requirements
 
-- iOS 16.0+
+- iOS 17.0+ (required by `@Observable`)
 - Swift 5.9+
 - Xcode 16.0+
 
@@ -28,25 +46,35 @@ Add PageKit to your project using Xcode:
 
 1. File > Add Package Dependencies
 2. Enter: `https://github.com/Marquis103/PageKit`
-3. Select "Branch" and use `main`
+3. Select "Up to Next Major Version" from `2.0.0`
 
 Or add it to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Marquis103/PageKit", branch: "main")
+    .package(url: "https://github.com/Marquis103/PageKit", from: "2.0.0")
 ]
 ```
 
-> **Note**: This is a private repository. Ensure you have access and your SSH keys are configured for GitHub.
+> **Note**: Pin to a version, not to `main`. PageKit follows semantic versioning, and
+> `main` carries breaking changes between major releases. See
+> [Migrating to 2.0.0](#migrating-to-200) if you are coming from 1.x.
 
 Then import the packages you need:
 
 ```swift
-import PageKit        // Core framework
+import PageKit        // Umbrella — re-exports PageKitCore + PageKitUIKit
 import PageKitForms   // Form handling
 import PageKitTheming // Theming system
 import PageKitUI      // UI components
+```
+
+Most consumers want the `PageKit` umbrella. Import the halves directly only when you
+need to be explicit about portability:
+
+```swift
+import PageKitCore    // Portable page system — no UIKit, no Combine
+import PageKitUIKit   // Coordinator, navigation, and presentation stack
 ```
 
 ---
@@ -465,7 +493,7 @@ public protocol CoordinatorDelegate: AnyObject {
 | `.x` | X mark |
 | `.none` | No back button |
 
-### Sheet Configuration (iOS 15+)
+### Sheet Configuration
 
 The `.sheet()` action uses native `UISheetPresentationController` with full PageKit integration:
 - Signals flow from parent coordinator to sheet
@@ -772,6 +800,18 @@ override func handle(signal: ProfilePage.Signal) async {
 }
 ```
 
+`PageViewModel` subscribes for you, so `handle(signal:)` is all most code needs. To
+observe the stream directly, use `signals()`:
+
+```swift
+for await signal in coordinator.signals() {
+    // ...
+}
+```
+
+`signals()` is multicast — every caller gets its own `AsyncStream` and every subscriber
+receives every signal.
+
 ---
 
 ## Child Coordinators
@@ -902,6 +942,50 @@ MyRootView()
 
 ---
 
+## Migrating to 2.0.0
+
+2.0.0 splits `PageKit` into `PageKitCore` (portable) and `PageKitUIKit` (platform), with
+`PageKit` remaining as an `@_exported` umbrella over both. **If you `import PageKit`, your
+imports need no changes.**
+
+There is one source-breaking change and one subtler one.
+
+### `signalPublisher` is removed
+
+`PageSignalPublisher.signalPublisher` — `AnyPublisher<PageSignal, Never>` — is gone.
+Signals are now delivered as an `AsyncStream`:
+
+```swift
+// Before (1.x)
+coordinator.signalPublisher
+    .sink { signal in handle(signal) }
+    .store(in: &cancellables)
+
+// After (2.0.0)
+for await signal in coordinator.signals() {
+    handle(signal)
+}
+```
+
+If you subscribed inside a type with a lifetime, hold the loop in a `Task` and cancel it
+on teardown. `PageViewModel` already does this for you.
+
+### `Coordinating` no longer inherits `CoordinatorDelegate`
+
+The portable `Coordinating` contract is now just `{ coordinate(action:), send(signal:) }`.
+The UIKit `Coordinator` base class conforms to `CoordinatorDelegate` explicitly, so
+**subclasses of `Coordinator` are unaffected**. Only types that conformed to `Coordinating`
+directly *and* relied on inheriting the delegate requirements need to add that conformance
+themselves.
+
+### Unchanged
+
+`send(signal:)`, `handle(signal:)`, `coordinate(action:)`, `navigate`, `startCoordinator`,
+child-coordinator tracking, and the entire presentation stack behave identically.
+`PageKitUI`, `PageKitForms`, `PageKitContainers`, and `PageFramework` are untouched.
+
+---
+
 ## License
 
-Copyright 2025 PageKit. All rights reserved.
+PageKit is available under the MIT License. See [LICENSE](LICENSE) for the full text.
