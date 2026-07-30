@@ -8,17 +8,17 @@ import SwiftUI
 
 // MARK: - BottomPinnedViewModifier
 
-public struct BottomPinnedViewModifier<Content: View>: ViewModifier {
+struct BottomPinnedViewModifier<Content: View>: ViewModifier {  // PE-536/E4: internal — bridge codegen chokes on the builder init; the .bottomPinned extension is the API
 	let pinnedContent: Content
 
 	@State
 	var pinnedContentHeight: CGFloat = 0
 
-	public init(@ViewBuilder pinnedContent: () -> Content) {
+	init(@ViewBuilder pinnedContent: () -> Content) {
 		self.pinnedContent = pinnedContent()
 	}
 
-	public func body(content: Self.Content) -> some View {
+	func body(content: Self.Content) -> some View {
 		ZStack {
 			content
 				.padding(.bottom, pinnedContentHeight)
