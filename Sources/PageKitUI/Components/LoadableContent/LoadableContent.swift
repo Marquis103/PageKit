@@ -62,10 +62,10 @@ public struct LoadableContent<
 	let errorContent: (Failure) -> ErrorContent
 	let onRetry: (() async -> Void)?
 
-	@State private var animatedState: LoadingState<StateContent, Failure>
+	@State var animatedState: LoadingState<StateContent, Failure>
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?
 
 	/// Designated initializer — fully custom loading / empty / error
 	/// views. Each slot is independent: pass `EmptyView()` from any
@@ -329,7 +329,7 @@ public struct DefaultEmptyStateView: View {
 	let onRetry: () async -> Void
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?
 
 	public init(onRetry: @escaping () async -> Void) {
 		self.onRetry = onRetry
@@ -362,7 +362,7 @@ public struct DefaultErrorStateView: View {
 	let onRetry: () async -> Void
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?
 
 	public init(error: Error, onRetry: @escaping () async -> Void) {
 		self.error = error

@@ -49,10 +49,10 @@ public struct List<Data: RandomAccessCollection, Content: View>: View where Data
 	private let content: (Data.Element) -> Content
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?
 
 	@Environment(\.interaction)
-	private var interaction: Interaction
+	var interaction: Interaction
 
 	/// Creates a List with customizable appearance and optional refresh
 	/// - Parameters:

@@ -25,7 +25,7 @@ public struct SubtitleText: TextConfigurable {
 	public var textColor: Color?
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme
 
 	/// Creates a Subtitle text component
 	/// - Parameter text: The text content to display

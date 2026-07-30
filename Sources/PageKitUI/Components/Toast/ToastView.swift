@@ -15,7 +15,7 @@ public struct ToastView: View {
 	let onDismiss: () -> Void
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?
 
 	public init(toast: ToastMessage, onDismiss: @escaping () -> Void) {
 		self.toast = toast

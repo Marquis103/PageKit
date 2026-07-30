@@ -14,7 +14,7 @@ import SwiftUI
 ///
 /// Example usage:
 /// ```swift
-/// @StateObject private var throttler = Throttler()
+/// @StateObject var throttler = Throttler()
 ///
 /// Button("Submit") {
 ///     Task {

@@ -68,10 +68,10 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 	public let onClick: () -> Void
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme
 
 	@Environment(\.isEnabled)
-	private var isEnabled
+	var isEnabled
 
 	#if os(Android)
 	// PE-536/E4 spike: plain storage — @Observable reads still drive updates;
@@ -79,7 +79,7 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 	private let throttler: ButtonThrottler = .init()
 	#else
 	@StateObject
-	private var throttler: ButtonThrottler = .init()
+	var throttler: ButtonThrottler = .init()
 	#endif
 
 	/// Creates a base button with the specified configuration

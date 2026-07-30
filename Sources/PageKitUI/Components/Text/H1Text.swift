@@ -25,7 +25,7 @@ public struct H1Text: TextConfigurable {
 	public var textColor: Color?
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme
 
 	/// Creates an H1 text component
 	/// - Parameter text: The text content to display

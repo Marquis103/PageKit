@@ -45,7 +45,7 @@ public struct HorizontalList<Data: RandomAccessCollection, Content: View>: View 
 	private let content: (Data.Element) -> Content
 
 	@Environment(\.interaction)
-	private var interaction: Interaction
+	var interaction: Interaction
 
 	/// Creates a HorizontalList with customizable appearance and optional refresh
 	/// - Parameters:

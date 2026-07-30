@@ -25,7 +25,7 @@ public struct HeroText: TextConfigurable {
 	public var textColor: Color?
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme
 
 	/// Creates a Hero text component
 	/// - Parameter text: The text content to display

@@ -17,7 +17,7 @@ struct ShakeModifier: Animatable, ViewModifier {
 	let maxOffset: CGFloat
 
 	@State
-	private var offset: CGFloat = 0
+	var offset: CGFloat = 0
 
 	func body(content: Content) -> some View {
 		content

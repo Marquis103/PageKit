@@ -32,7 +32,7 @@ public struct LinkButton<T: ImageIconProtocol>: ButtonConfigurable {
 	public var throttleDuration: Double = 0.5
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme
 
 	/// Creates a link button
 	/// - Parameters:

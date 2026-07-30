@@ -25,7 +25,7 @@ public struct H3Text: TextConfigurable {
 	public var textColor: Color?
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme
 
 	/// Creates an H3 text component
 	/// - Parameter text: The text content to display

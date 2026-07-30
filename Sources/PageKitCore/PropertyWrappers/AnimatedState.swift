@@ -9,9 +9,9 @@ import SwiftUI
 @propertyWrapper
 public struct AnimatedState<Value>: DynamicProperty {
 	@State
-	private var animatedValue: Value
+	var animatedValue: Value
 	@State
-	private var isAnimationEnabled: Bool = true
+	var isAnimationEnabled: Bool = true
 
 	private var animation: Animation
 

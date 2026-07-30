@@ -33,7 +33,7 @@ public struct PrimaryButton<T: ImageIconProtocol>: ButtonConfigurable {
 	public var throttleDuration: Double = 0.5
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme
 
 	/// Creates a primary button
 	/// - Parameters:

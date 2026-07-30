@@ -16,7 +16,7 @@ struct PopModifier: Animatable, ViewModifier {
 	let maxScale: CGFloat
 
 	@State
-	private var scale: CGFloat = 1
+	var scale: CGFloat = 1
 
 	func body(content: Content) -> some View {
 		content

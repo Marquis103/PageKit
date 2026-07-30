@@ -44,7 +44,7 @@ public struct ScrollView<Content: View>: View {
 	private let content: Content
 
 	@Environment(\.interaction)
-	private var interaction: Interaction
+	var interaction: Interaction
 
 	/// Creates a ScrollView with an optional refresh closure
 	/// - Parameters:

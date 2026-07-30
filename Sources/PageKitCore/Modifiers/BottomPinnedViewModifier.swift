@@ -12,7 +12,7 @@ public struct BottomPinnedViewModifier<Content: View>: ViewModifier {
 	let pinnedContent: Content
 
 	@State
-	private var pinnedContentHeight: CGFloat = 0
+	var pinnedContentHeight: CGFloat = 0
 
 	public init(@ViewBuilder pinnedContent: () -> Content) {
 		self.pinnedContent = pinnedContent()

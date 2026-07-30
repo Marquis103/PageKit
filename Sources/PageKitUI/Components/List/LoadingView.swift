@@ -28,7 +28,7 @@ public struct LoadingView: View {
 	private let spacing: CGFloat
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?
 
 	/// Creates a loading view
 	/// - Parameters:

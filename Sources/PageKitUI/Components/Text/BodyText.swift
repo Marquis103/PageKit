@@ -25,7 +25,7 @@ public struct BodyText: TextConfigurable {
 	public var textColor: Color?
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme
 
 	/// Creates a Body text component
 	/// - Parameter text: The text content to display

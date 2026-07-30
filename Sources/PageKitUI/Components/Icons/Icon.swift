@@ -32,7 +32,7 @@ public struct Icon<T: ImageIconProtocol>: View {
 	private(set) var multiColorIcon: Bool = false
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme
 
 	/// Creates an icon view
 	/// - Parameter icon: The icon asset conforming to ImageIconProtocol
