@@ -156,8 +156,8 @@ public struct DefaultColorStyles: ColorStylesProviding {
 			),
 			background: DefaultBackgroundColors(
 				primary: .white,
-				secondary: Color(uiColor: .systemGray6),
-				tertiary: Color(uiColor: .systemGray5)
+				secondary: pkSystemGray6,
+				tertiary: pkSystemGray5
 			),
 			accent: .standard,
 			divider: .gray.opacity(0.3)
@@ -178,8 +178,8 @@ public struct DefaultColorStyles: ColorStylesProviding {
 			),
 			background: DefaultBackgroundColors(
 				primary: .black,
-				secondary: Color(uiColor: .systemGray6),
-				tertiary: Color(uiColor: .systemGray5)
+				secondary: pkSystemGray6,
+				tertiary: pkSystemGray5
 			),
 			accent: .standard,
 			divider: .gray.opacity(0.3)
