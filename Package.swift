@@ -60,7 +60,8 @@ let package = Package(
         // free of UIKit and Combine (grep-gated by PageKitCoreTests).
         .target(
             name: "PageKitCore",
-            dependencies: [],
+            dependencies: [
+                .product(name: "SkipFuseUI", package: "skip-fuse-ui"),],
             path: "Sources/PageKitCore"
         ),
         // UIKit half — depends on Core for the portable contracts.
@@ -79,13 +80,18 @@ let package = Package(
         // Theming system - standalone, no dependencies
         .target(
             name: "PageKitTheming",
-            dependencies: [],
+            dependencies: [
+                .product(name: "SkipFuseUI", package: "skip-fuse-ui"),],
             path: "Sources/PageKitTheming"
         ),
         // UI components - depends on theming and core (for PageEventHandler)
         .target(
             name: "PageKitUI",
-            dependencies: ["PageKitTheming", "PageKit"],
+            dependencies: [
+                .product(name: "SkipFuseUI", package: "skip-fuse-ui"),
+                "PageKitTheming",
+                "PageKitCore",  // PE-536/E4 spike: umbrella (UIKit half) detached for Android
+            ],
             path: "Sources/PageKitUI"
         ),
         // Form system - depends on core

@@ -4,7 +4,9 @@
 //  Copyright © 2025 PageKit All rights reserved.
 //
 
-import UIKit
+#if canImport(UIKit)
+import UIKit  // PE-536/E4 spike: haptics only
+#endif
 import SwiftUI
 
 /// Static API for showing toast notifications

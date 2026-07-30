@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import PageKit
+import PageKitCore  // PE-536/E4 spike: umbrella detached
 
 /// A scroll view with optional pull-to-refresh support
 ///

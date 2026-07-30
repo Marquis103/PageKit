@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import PageKit
+import PageKitCore  // PE-536/E4 spike: umbrella detached
 import PageKitTheming
 
 /// A custom animated loading spinner that uses the theme's primary color.

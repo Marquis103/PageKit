@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import PageKit
+import PageKitCore  // PE-536/E4 spike: umbrella detached
 import PageKitTheming
 
 /// A vertical list with optional pull-to-refresh and separators
