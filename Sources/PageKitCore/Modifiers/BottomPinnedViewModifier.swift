@@ -18,7 +18,7 @@ struct BottomPinnedViewModifier<Content: View>: ViewModifier {  // PE-536/E4: in
 		self.pinnedContent = pinnedContent()
 	}
 
-	func body(content: Self.Content) -> some View {
+	func body(content: Content) -> some View {
 		ZStack {
 			content
 				.padding(.bottom, pinnedContentHeight)
