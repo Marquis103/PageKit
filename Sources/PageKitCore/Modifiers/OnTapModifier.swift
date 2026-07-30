@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - TapModifier
 
 /// A view modifier that adds a throttled tap gesture to prevent double-taps.
-private struct TapModifier: ViewModifier {
+struct TapModifier: ViewModifier {
 	@StateObject
 	private var throttler: Throttler = .init()
 

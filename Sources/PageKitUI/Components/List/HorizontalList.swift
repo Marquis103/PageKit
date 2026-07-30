@@ -121,7 +121,7 @@ public struct HorizontalList<Data: RandomAccessCollection, Content: View>: View 
 // MARK: - HorizontalListRefreshableModifier
 
 /// Internal modifier that conditionally applies .refreshable
-private struct HorizontalListRefreshableModifier: ViewModifier {
+struct HorizontalListRefreshableModifier: ViewModifier {
 	let isEnabled: Bool
 	let onRefresh: (() async -> Void)?
 

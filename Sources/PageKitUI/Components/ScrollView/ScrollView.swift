@@ -100,7 +100,7 @@ public struct ScrollView<Content: View>: View {
 // MARK: - RefreshableModifier
 
 /// Internal modifier that conditionally applies .refreshable
-private struct RefreshableModifier: ViewModifier {
+struct RefreshableModifier: ViewModifier {
 	let isEnabled: Bool
 	let onRefresh: (() async -> Void)?
 

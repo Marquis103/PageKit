@@ -8,7 +8,7 @@ import SwiftUI
 
 // MARK: - ShakeModifier
 
-private struct ShakeModifier: Animatable, ViewModifier {
+struct ShakeModifier: Animatable, ViewModifier {
 	@Binding
 	var shakeTrigger: Bool
 

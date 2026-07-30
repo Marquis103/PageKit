@@ -8,7 +8,7 @@ import SwiftUI
 
 // MARK: - PopModifier
 
-private struct PopModifier: Animatable, ViewModifier {
+struct PopModifier: Animatable, ViewModifier {
 	@Binding
 	var popTrigger: Bool
 

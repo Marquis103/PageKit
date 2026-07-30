@@ -163,7 +163,7 @@ public struct List<Data: RandomAccessCollection, Content: View>: View where Data
 // MARK: - ListRefreshableModifier
 
 /// Internal modifier that conditionally applies .refreshable
-private struct ListRefreshableModifier: ViewModifier {
+struct ListRefreshableModifier: ViewModifier {
 	let isEnabled: Bool
 	let onRefresh: (() async -> Void)?
 
