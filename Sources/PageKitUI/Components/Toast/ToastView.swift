@@ -1,3 +1,5 @@
+// PE-536/E4 spike/android: UIKit-window-presented toast subsystem — Darwin-only.
+#if !os(Android)
 //
 //  ToastView.swift
 //
@@ -115,6 +117,7 @@ struct ToastOverlayView: View {
 // MARK: - Preview
 
 #if DEBUG
+#if !os(Android)  // PE-536 preview gate: SkipSwiftUI has no #Preview macro
 #Preview("Toast Styles") {
 	VStack(spacing: 20) {
 		ToastView(toast: .success("Item saved successfully!")) {}
@@ -125,4 +128,7 @@ struct ToastOverlayView: View {
 	.padding()
 	.background(Color.gray.opacity(0.2))
 }
+#endif
+#endif
+
 #endif

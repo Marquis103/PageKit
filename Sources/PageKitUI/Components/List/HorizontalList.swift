@@ -145,6 +145,7 @@ private struct PreviewCategory: Identifiable {
 	let color: Color
 }
 
+#if !os(Android)  // PE-536 preview gate: SkipSwiftUI has no #Preview macro
 #Preview("HorizontalList") {
 	let categories = [
 		PreviewCategory(name: "Design", color: .blue),
@@ -169,4 +170,5 @@ private struct PreviewCategory: Identifiable {
 		}
 	}
 }
+#endif
 #endif

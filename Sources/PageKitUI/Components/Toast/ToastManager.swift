@@ -1,3 +1,5 @@
+// PE-536/E4 spike/android: UIKit-window-presented toast subsystem — Darwin-only.
+#if !os(Android)
 //
 //  ToastManager.swift
 //
@@ -126,3 +128,5 @@ public final class ToastManager {
 		present(next)
 	}
 }
+
+#endif

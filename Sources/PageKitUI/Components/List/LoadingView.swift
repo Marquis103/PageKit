@@ -57,6 +57,7 @@ public struct LoadingView: View {
 // MARK: - Preview
 
 #if DEBUG
+#if !os(Android)  // PE-536 preview gate: SkipSwiftUI has no #Preview macro
 #Preview("Loading View") {
 	VStack(spacing: 40) {
 		LoadingView()
@@ -69,4 +70,5 @@ public struct LoadingView: View {
 	}
 	.padding()
 }
+#endif
 #endif

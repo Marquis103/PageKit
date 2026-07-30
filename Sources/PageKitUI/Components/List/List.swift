@@ -186,6 +186,7 @@ private struct PreviewItem: Identifiable {
 	let title: String
 }
 
+#if !os(Android)  // PE-536 preview gate: SkipSwiftUI has no #Preview macro
 #Preview("List") {
 	let items = [
 		PreviewItem(title: "Item 1"),
@@ -200,7 +201,9 @@ private struct PreviewItem: Identifiable {
 			.padding(.vertical, 8)
 	}
 }
+#endif
 
+#if !os(Android)  // PE-536 preview gate: SkipSwiftUI has no #Preview macro
 #Preview("List Without Separators") {
 	let items = [
 		PreviewItem(title: "Item 1"),
@@ -215,4 +218,5 @@ private struct PreviewItem: Identifiable {
 			.cornerRadius(8)
 	}
 }
+#endif
 #endif

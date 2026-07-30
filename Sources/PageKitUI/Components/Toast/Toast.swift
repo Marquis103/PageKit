@@ -1,3 +1,5 @@
+// PE-536/E4 spike/android: UIKit-window-presented toast subsystem — Darwin-only.
+#if !os(Android)
 //
 //  Toast.swift
 //
@@ -159,3 +161,5 @@ private class ToastWindow: UIWindow {
 		return hitView
 	}
 }
+
+#endif
