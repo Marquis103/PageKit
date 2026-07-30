@@ -8,11 +8,6 @@ let package = Package(
     platforms: [
         .iOS(.v17), .macOS(.v14)  // PE-536/E4 spike: macOS for skip host builds
     ],
-    dependencies: [
-        // PE-536/E4 spike/android: SkipFuseUI's product carries a target named
-        // `SwiftUI` when TARGET_OS_ANDROID=1 — the mapping for `import SwiftUI`.
-        .package(url: "https://source.skip.tools/skip-fuse-ui.git", from: "1.0.0"),
-    ],
     products: [
         // Portable page system — no UIKit, no Combine (PE-533 split).
         // The Android-compatible core: Page family, view state/model,
@@ -59,6 +54,11 @@ let package = Package(
             name: "PageFramework",
             targets: ["PageFramework"]
         ),
+    ],
+    dependencies: [
+        // PE-536/E4 spike/android: SkipFuseUI's product carries a target named
+        // `SwiftUI` when TARGET_OS_ANDROID=1 — the mapping for `import SwiftUI`.
+        .package(url: "https://source.skip.tools/skip-fuse-ui.git", from: "1.0.0"),
     ],
     targets: [
         // Portable core — the split's whole point is this target staying
