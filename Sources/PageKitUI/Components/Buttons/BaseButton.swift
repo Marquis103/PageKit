@@ -79,7 +79,7 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 	private let throttler: ButtonThrottler = .init()
 	#else
 	@StateObject
-	var throttler: ButtonThrottler = .init()
+	private var throttler: ButtonThrottler = .init()
 	#endif
 
 	/// Creates a base button with the specified configuration
