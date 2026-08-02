@@ -1,4 +1,7 @@
 # PE-536/E4 spike: skipstone processing for SwiftUI composition (bridging false — native-consumed only).
+# B1/Gate-1b bisect: flipping bridging:true here FAILS skipstone codegen on the generic TappableRow
+# (PageKitUI/Components/Rows/TappableRow.swift:35 — "Generic types cannot bridge constructors or static members").
+# Module-granular bridging on a view module is not free; needs per-symbol `// SKIP @nobridge` or target splitting.
 skip:
   mode: 'native'
   bridging: false
