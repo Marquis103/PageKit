@@ -28,7 +28,7 @@ public struct LoadingView: View {
 	private let spacing: CGFloat
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?  // skipstone: internal (see PORTABILITY.md)
 
 	/// Creates a loading view
 	/// - Parameters:
@@ -57,6 +57,7 @@ public struct LoadingView: View {
 // MARK: - Preview
 
 #if DEBUG
+#if !os(Android)  // SkipUI has no #Preview macro
 #Preview("Loading View") {
 	VStack(spacing: 40) {
 		LoadingView()
@@ -69,4 +70,5 @@ public struct LoadingView: View {
 	}
 	.padding()
 }
+#endif
 #endif

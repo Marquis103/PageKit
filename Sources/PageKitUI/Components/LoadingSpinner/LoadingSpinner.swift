@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import PageKit
+import PageKitCore  // umbrella detached — the UIKit half must not enter the Android graph
 import PageKitTheming
 
 /// A custom animated loading spinner that uses the theme's primary color.
@@ -23,7 +23,7 @@ import PageKitTheming
 /// ```
 public struct LoadingSpinner: View {
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?  // skipstone: internal (see PORTABILITY.md)
 
 	@AnimatedState(animation: .linear(duration: 0.75).repeatForever(autoreverses: false))
 	private var rotation: Double = 0
@@ -35,7 +35,7 @@ public struct LoadingSpinner: View {
 	private var trimEnd: CGFloat = 0.975
 
 	@State
-	private var isAnimating: Bool = false
+	var isAnimating: Bool = false  // skipstone: internal (see PORTABILITY.md)
 
 	public init() {}
 

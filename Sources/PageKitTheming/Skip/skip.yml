@@ -1,0 +1,6 @@
+# skipstone processing for SkipUI composition. bridging stays false: PageKitTheming
+# is consumed from Swift only (Fuse-native), never from Kotlin — see _context.md §3
+# in the Ayes repo (docs/architecture/android-phase4/) for the corrected rule.
+skip:
+  mode: 'native'
+  bridging: false

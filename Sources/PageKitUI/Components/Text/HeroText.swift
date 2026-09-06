@@ -18,14 +18,14 @@ import PageKitTheming
 ///     .textSize(.large)
 ///     .textColor(.blue)
 /// ```
-public struct HeroText: TextConfigurable {
+public struct HeroText: TextConfigurable, View {  // direct View listing — indirect (protocol-only) conformance composes empty under SkipUI (B1 P10/P11)
 	public let text: String
 
 	public var textSize: TextSize = .medium
 	public var textColor: Color?
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme  // skipstone: internal (see PORTABILITY.md)
 
 	/// Creates a Hero text component
 	/// - Parameter text: The text content to display

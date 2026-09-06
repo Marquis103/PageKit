@@ -6,6 +6,17 @@
 
 import SwiftUI
 
+// SkipUI implements no UIColor-backed Color initializers (systemGray5/6,
+// _context.md §6). Android uses the same gray values as RGB literals — keep
+// the two pairs in sync with UIKit's light-mode systemGray5/6.
+#if os(Android)
+private let pkSystemGray5 = Color(red: 0.898, green: 0.898, blue: 0.918)
+private let pkSystemGray6 = Color(red: 0.949, green: 0.949, blue: 0.969)
+#else
+private let pkSystemGray5 = Color(.systemGray5)
+private let pkSystemGray6 = Color(.systemGray6)
+#endif
+
 // MARK: - DefaultTextColors
 
 public struct DefaultTextColors: TextColorsProviding {
@@ -147,8 +158,8 @@ public struct DefaultColorStyles: ColorStylesProviding {
 			),
 			background: DefaultBackgroundColors(
 				primary: .white,
-				secondary: Color(uiColor: .systemGray6),
-				tertiary: Color(uiColor: .systemGray5)
+				secondary: pkSystemGray6,
+				tertiary: pkSystemGray5
 			),
 			accent: .standard,
 			divider: .gray.opacity(0.3)
@@ -169,8 +180,8 @@ public struct DefaultColorStyles: ColorStylesProviding {
 			),
 			background: DefaultBackgroundColors(
 				primary: .black,
-				secondary: Color(uiColor: .systemGray6),
-				tertiary: Color(uiColor: .systemGray5)
+				secondary: pkSystemGray6,
+				tertiary: pkSystemGray5
 			),
 			accent: .standard,
 			divider: .gray.opacity(0.3)

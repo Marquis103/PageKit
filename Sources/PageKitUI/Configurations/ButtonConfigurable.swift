@@ -8,6 +8,11 @@ import SwiftUI
 
 /// A protocol for button components that support configurable size and icons
 /// Provides a fluent API for customizing button appearance consistently
+///
+/// Every conformer must also list `View` directly in its own inheritance clause
+/// (`struct PrimaryButton<T>: ButtonConfigurable, View`). SkipUI composes only views
+/// whose `View` conformance is stated directly on the type; conformance arriving
+/// solely through this protocol's refinement renders empty on Android (B1 P10/P11).
 public protocol ButtonConfigurable: View {
 	associatedtype IconType: ImageIconProtocol
 

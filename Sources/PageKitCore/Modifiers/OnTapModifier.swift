@@ -1,3 +1,8 @@
+// The Darwin path is @StateObject-bound (no ObservableObject under Skip Fuse,
+// E4-F3) and uses contentShape (unimplemented by SkipUI, _context.md §6).
+// Behavioral delta, deliberate: the Android onTap is a plain onTapGesture with
+// no double-tap throttle — W3/W5's interactivity pass owns throttle parity.
+#if !os(Android)
 //
 //  OnTapModifier.swift
 //
@@ -63,3 +68,16 @@ extension View {
 		)
 	}
 }
+
+#else
+import SwiftUI
+
+extension View {
+	public func onTap(
+		interval: Double = 0.5,
+		action: @escaping () -> Void
+	) -> some View {
+		onTapGesture { action() }
+	}
+}
+#endif

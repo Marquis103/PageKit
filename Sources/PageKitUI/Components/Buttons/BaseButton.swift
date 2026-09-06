@@ -8,6 +8,27 @@ import SwiftUI
 import PageKitTheming
 
 /// Throttler utility for button click rate limiting
+#if os(Android)
+// ObservableObject/@Published do not exist under Skip Fuse (E4-F3);
+// @Observable variant with the same throttle window semantics.
+@MainActor
+@Observable
+private final class ButtonThrottler {
+	private(set) var isThrottling = false
+
+	func throttle(
+		interval: Double = 0.5,
+		action: @escaping () -> Void
+	) async {
+		guard !isThrottling else { return }
+		isThrottling = true
+		action()
+		let nanoseconds = interval * Double(1_000_000_000)
+		try? await Task.sleep(nanoseconds: UInt64(nanoseconds))
+		isThrottling = false
+	}
+}
+#else
 @MainActor
 private final class ButtonThrottler: ObservableObject {
 	@Published
@@ -25,6 +46,7 @@ private final class ButtonThrottler: ObservableObject {
 		isThrottling = false
 	}
 }
+#endif
 
 /// The base button component that all styled buttons are built upon
 ///
@@ -47,13 +69,21 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 	public let onClick: () -> Void
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme  // skipstone: internal (see PORTABILITY.md)
 
 	@Environment(\.isEnabled)
-	private var isEnabled
+	var isEnabled  // skipstone: internal (see PORTABILITY.md)
 
+	#if os(Android)
+	// Plain storage — @StateObject does not exist under Skip Fuse (E4-F3) and
+	// @Observable reads still drive updates. Known delta: the instance re-inits
+	// per body evaluation, so throttle state does not persist across renders —
+	// W3/W5's interactivity pass owns throttle parity.
+	private let throttler: ButtonThrottler = .init()
+	#else
 	@StateObject
 	private var throttler: ButtonThrottler = .init()
+	#endif
 
 	/// Creates a base button with the specified configuration
 	/// - Parameters:
@@ -102,7 +132,9 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 						.textSize(.custom(buttonSize.textSize))
 						.textColor(style.contentColor)
 						.lineLimit(1)
+						#if !os(Android)  // SkipUI has no truncationMode; Compose ellipsizes by default
 						.truncationMode(.tail)
+						#endif
 
 					if let trailingIcon {
 						trailingIcon
@@ -112,7 +144,9 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 				.padding(buttonSize.contentPadding)
 				.frame(maxWidth: .infinity)
 				.background(style.backgroundColor)
+				#if !os(Android)  // SkipUI has no contentShape; Compose hit-tests the label bounds
 				.contentShape(Rectangle())
+				#endif
 			}
 		)
 		.buttonStyle(PlainButtonStyle())

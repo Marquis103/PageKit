@@ -19,7 +19,7 @@ import PageKitTheming
 /// })
 /// .buttonSize(.medium)
 /// ```
-public struct SecondaryButton<T: ImageIconProtocol>: ButtonConfigurable {
+public struct SecondaryButton<T: ImageIconProtocol>: ButtonConfigurable, View {  // direct View listing — indirect (protocol-only) conformance composes empty under SkipUI (B1 P10/P11)
 	public typealias IconType = T
 
 	public let text: String
@@ -31,7 +31,7 @@ public struct SecondaryButton<T: ImageIconProtocol>: ButtonConfigurable {
 	public var throttleDuration: Double = 0.5
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme  // skipstone: internal (see PORTABILITY.md)
 
 	/// Creates a secondary button
 	/// - Parameters:

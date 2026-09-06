@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import PageKit
+import PageKitCore  // umbrella detached — the UIKit half must not enter the Android graph
 import PageKitTheming
 
 /// A container view that manages loading, loaded, empty, error, and disabled states
@@ -62,10 +62,10 @@ public struct LoadableContent<
 	let errorContent: (Failure) -> ErrorContent
 	let onRetry: (() async -> Void)?
 
-	@State private var animatedState: LoadingState<StateContent, Failure>
+	@State var animatedState: LoadingState<StateContent, Failure>  // skipstone: internal (see PORTABILITY.md)
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?  // skipstone: internal (see PORTABILITY.md)
 
 	/// Designated initializer — fully custom loading / empty / error
 	/// views. Each slot is independent: pass `EmptyView()` from any
@@ -329,7 +329,7 @@ public struct DefaultEmptyStateView: View {
 	let onRetry: () async -> Void
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?  // skipstone: internal (see PORTABILITY.md)
 
 	public init(onRetry: @escaping () async -> Void) {
 		self.onRetry = onRetry
@@ -362,7 +362,7 @@ public struct DefaultErrorStateView: View {
 	let onRetry: () async -> Void
 
 	@Environment(\.optionalTheme)
-	private var theme: AnyTheme?
+	var theme: AnyTheme?  // skipstone: internal (see PORTABILITY.md)
 
 	public init(error: Error, onRetry: @escaping () async -> Void) {
 		self.error = error
