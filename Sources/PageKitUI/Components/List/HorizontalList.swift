@@ -1,3 +1,7 @@
+// skipstone codegen rejects the RandomAccessCollection-constrained generic (rulebook,
+// _context.md §4) — Darwin-only. Successor: Android call sites compose SkipUI's native
+// LazyHStack in a ScrollView; W3.4 attributes call sites per-site. See PORTABILITY.md.
+#if !os(Android)
 //
 //  HorizontalList.swift
 //
@@ -169,4 +173,6 @@ private struct PreviewCategory: Identifiable {
 		}
 	}
 }
+#endif
+
 #endif

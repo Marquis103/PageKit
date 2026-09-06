@@ -1,3 +1,8 @@
+// SkipUI does not implement Gesture.sequenced (_context.md §6). Behavioral
+// delta, deliberate: the Android onLongPress is a plain onLongPressGesture
+// without the two-stage sequenced gesture (gestureState is accepted and
+// unused) — W3/W5's interactivity pass owns gesture parity.
+#if !os(Android)
 //
 //  OnLongPressModifier.swift
 //
@@ -35,3 +40,20 @@ extension View {
 		)
 	}
 }
+
+#else
+import Foundation
+import SwiftUI
+
+extension View {
+	public func onLongPress(
+		gestureState: GestureState<Bool>,
+		minimumDuration: Double = 0.5,
+		completion: @escaping () -> Void
+	) -> some View {
+		onLongPressGesture(minimumDuration: minimumDuration) {
+			completion()
+		}
+	}
+}
+#endif

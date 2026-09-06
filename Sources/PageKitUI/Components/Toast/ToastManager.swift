@@ -1,3 +1,6 @@
+// UIKit-window-presented toast subsystem — Darwin-only. Successor: the W4 Android shell
+// presents its own banner overlay; Ayes does not consume this subsystem. See PORTABILITY.md.
+#if !os(Android)
 //
 //  ToastManager.swift
 //
@@ -126,3 +129,5 @@ public final class ToastManager {
 		present(next)
 	}
 }
+
+#endif

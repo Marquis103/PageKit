@@ -132,7 +132,9 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 						.textSize(.custom(buttonSize.textSize))
 						.textColor(style.contentColor)
 						.lineLimit(1)
+						#if !os(Android)  // SkipUI has no truncationMode; Compose ellipsizes by default
 						.truncationMode(.tail)
+						#endif
 
 					if let trailingIcon {
 						trailingIcon
@@ -142,7 +144,9 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 				.padding(buttonSize.contentPadding)
 				.frame(maxWidth: .infinity)
 				.background(style.backgroundColor)
+				#if !os(Android)  // SkipUI has no contentShape; Compose hit-tests the label bounds
 				.contentShape(Rectangle())
+				#endif
 			}
 		)
 		.buttonStyle(PlainButtonStyle())

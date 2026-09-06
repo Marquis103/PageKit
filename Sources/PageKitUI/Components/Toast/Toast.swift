@@ -1,3 +1,7 @@
+// UIKit-window-presented toast subsystem — Darwin-only (UIWindow/UIWindowScene have no
+// Android counterpart). Successor: the W4 Android shell presents its own banner overlay;
+// Ayes does not consume this subsystem. See PORTABILITY.md.
+#if !os(Android)
 //
 //  Toast.swift
 //
@@ -157,3 +161,5 @@ private class ToastWindow: UIWindow {
 		return hitView
 	}
 }
+
+#endif

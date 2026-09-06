@@ -1,3 +1,7 @@
+// skipstone bridge codegen rejects the ViewModifier.Content-shadowing generic and the
+// @ViewBuilder-taking public extension (rulebook, _context.md §4) — Darwin-only. Unused
+// by Ayes; W3 assesses an Android successor if a consumer needs one. See PORTABILITY.md.
+#if !os(Android)
 //
 //  BottomPinnedViewModifier.swift
 //
@@ -45,3 +49,5 @@ extension View {
 		modifier(BottomPinnedViewModifier(pinnedContent: pinnedContent))
 	}
 }
+
+#endif

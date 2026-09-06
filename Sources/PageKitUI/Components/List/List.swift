@@ -1,3 +1,7 @@
+// skipstone codegen rejects the RandomAccessCollection-constrained generic (rulebook,
+// _context.md §4) — Darwin-only. Successor: Android call sites compose SkipUI's native
+// List; W3.4 attributes Ayes call sites per-site. See PORTABILITY.md.
+#if !os(Android)
 //
 //  List.swift
 //
@@ -215,4 +219,6 @@ private struct PreviewItem: Identifiable {
 			.cornerRadius(8)
 	}
 }
+#endif
+
 #endif

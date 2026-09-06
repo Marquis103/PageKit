@@ -45,7 +45,9 @@ public struct TappableRow<Content: View>: View {
 	public var body: some View {
 		Button(action: action) {
 			content()
+				#if !os(Android)  // SkipUI has no contentShape; Compose hit-tests the row bounds
 				.contentShape(Rectangle())
+				#endif
 		}
 		.buttonStyle(.plain)
 		.disabled(isDisabled)
