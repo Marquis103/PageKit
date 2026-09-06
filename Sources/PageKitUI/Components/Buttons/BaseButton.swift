@@ -8,6 +8,27 @@ import SwiftUI
 import PageKitTheming
 
 /// Throttler utility for button click rate limiting
+#if os(Android)
+// ObservableObject/@Published do not exist under Skip Fuse (E4-F3);
+// @Observable variant with the same throttle window semantics.
+@MainActor
+@Observable
+private final class ButtonThrottler {
+	private(set) var isThrottling = false
+
+	func throttle(
+		interval: Double = 0.5,
+		action: @escaping () -> Void
+	) async {
+		guard !isThrottling else { return }
+		isThrottling = true
+		action()
+		let nanoseconds = interval * Double(1_000_000_000)
+		try? await Task.sleep(nanoseconds: UInt64(nanoseconds))
+		isThrottling = false
+	}
+}
+#else
 @MainActor
 private final class ButtonThrottler: ObservableObject {
 	@Published
@@ -25,6 +46,7 @@ private final class ButtonThrottler: ObservableObject {
 		isThrottling = false
 	}
 }
+#endif
 
 /// The base button component that all styled buttons are built upon
 ///
@@ -52,8 +74,16 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 	@Environment(\.isEnabled)
 	private var isEnabled
 
+	#if os(Android)
+	// Plain storage — @StateObject does not exist under Skip Fuse (E4-F3) and
+	// @Observable reads still drive updates. Known delta: the instance re-inits
+	// per body evaluation, so throttle state does not persist across renders —
+	// W3/W5's interactivity pass owns throttle parity.
+	private let throttler: ButtonThrottler = .init()
+	#else
 	@StateObject
 	private var throttler: ButtonThrottler = .init()
+	#endif
 
 	/// Creates a base button with the specified configuration
 	/// - Parameters:

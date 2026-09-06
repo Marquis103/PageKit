@@ -1,3 +1,8 @@
+// ObservableObject/@Published do not exist under Skip Fuse (E4-F3). Android uses
+// the @Observable variant below. Behavioral delta, deliberate: the Android
+// throttle is date-window based and does not expose isThrottling — W3/W5's
+// interactivity pass owns observation parity if a consumer needs it.
+#if !os(Android)
 //
 //  Throttler.swift
 //
@@ -46,3 +51,24 @@ public final class Throttler: ObservableObject {
 		isThrottling = false
 	}
 }
+
+#else
+import Foundation
+import Observation
+import SwiftUI
+
+@Observable
+public final class Throttler {
+	private var lastFire: Date = .distantPast
+
+	public init() {}
+
+	@MainActor
+	public func throttle(interval: Double, action: @MainActor () -> Void) async {
+		let now = Date()
+		guard now.timeIntervalSince(lastFire) >= interval else { return }
+		lastFire = now
+		action()
+	}
+}
+#endif
