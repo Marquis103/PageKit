@@ -21,7 +21,7 @@ import PageKitTheming
 /// })
 /// .buttonSize(.large)
 /// ```
-public struct DestructiveButton<T: ImageIconProtocol>: ButtonConfigurable {
+public struct DestructiveButton<T: ImageIconProtocol>: ButtonConfigurable, View {  // direct View listing — indirect (protocol-only) conformance composes empty under SkipUI (B1 P10/P11)
 	public typealias IconType = T
 
 	public let text: String

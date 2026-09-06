@@ -18,7 +18,7 @@ import PageKitTheming
 ///     .textSize(.medium)
 ///     .textColor(.blue)
 /// ```
-public struct LinkText: TextConfigurable {
+public struct LinkText: TextConfigurable, View {  // direct View listing — indirect (protocol-only) conformance composes empty under SkipUI (B1 P10/P11)
 	public let text: String
 
 	public var textSize: TextSize = .medium

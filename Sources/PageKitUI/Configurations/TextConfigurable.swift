@@ -8,6 +8,11 @@ import SwiftUI
 
 /// A protocol for text components that support configurable size and color
 /// Provides a fluent API for styling text elements consistently across the app
+///
+/// Every conformer must also list `View` directly in its own inheritance clause
+/// (`struct HeroText: TextConfigurable, View`). SkipUI composes only views whose
+/// `View` conformance is stated directly on the type; conformance arriving solely
+/// through this protocol's refinement renders empty on Android (B1 P10/P11).
 public protocol TextConfigurable: View {
 	/// The size configuration for the text
 	var textSize: TextSize { get set }
