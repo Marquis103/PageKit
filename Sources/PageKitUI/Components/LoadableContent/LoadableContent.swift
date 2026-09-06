@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import PageKit
+import PageKitCore  // umbrella detached — the UIKit half must not enter the Android graph
 import PageKitTheming
 
 /// A container view that manages loading, loaded, empty, error, and disabled states

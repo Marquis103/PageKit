@@ -5,7 +5,7 @@
 //
 
 import SwiftUI
-import PageKit
+import PageKitCore  // umbrella detached — the UIKit half must not enter the Android graph
 
 /// A scroll view with optional pull-to-refresh support
 ///
