@@ -24,7 +24,7 @@ As of 2.0.0 the page system is split along a portability seam:
 | `PageKitUIKit` | `PageKitCore` | The platform layer: `Coordinator`, `NavigationAction`, `CoordinatingNavigation`, `PageController`, and the host/sheet/modal presentation stack. |
 | `PageKit` | both | Umbrella that `@_exported import`s both halves. This is what most consumers import. |
 | `PageKitTheming` | — | Protocol-based theming. |
-| `PageKitUI` | `PageKitTheming`, `PageKit` | Buttons, icons, text, and other components. |
+| `PageKitUI` | `PageKitTheming`, `PageKitCore` | Buttons, icons, text, and other components. Since 2.1.0 it depends on `PageKitCore` directly rather than the `PageKit` umbrella, so it can enter the Android graph without the UIKit half; the umbrella `@_exported`s Core, so consumers see the same API. |
 | `PageKitForms` | `PageKit` | Form handling with validation and submission. |
 | `PageKitContainers` | `PageKit` | Multi-page container layouts for iPad. |
 | `PageFramework` | all of the above | Convenience umbrella over the whole framework. |
@@ -939,6 +939,20 @@ struct MyTheme: Theme {
 MyRootView()
     .environment(\.theme, AnyTheme(MyTheme()))
 ```
+
+---
+
+## 2.1.0 — the Android pass
+
+`PageKitCore`, `PageKitTheming` and `PageKitUI` compile and compose for Android under
+[Skip Fuse](https://skip.dev). **iOS consumers are unaffected**: the manifest declares
+zero package dependencies and no plugins unless the consuming Skip app's build exports
+`SKIP_ANDROID` for its gradle session, so a plain Xcode resolve of 2.1.0 sees exactly
+the 2.0.0 graph. The full wiring, the two source rules the Android pass depends on
+(direct `View` listing on `TextConfigurable`/`ButtonConfigurable` conformers, and the
+`// skipstone: internal` markers), and the per-component status table live in
+[`PORTABILITY.md`](./PORTABILITY.md). On-device render evidence for the 2.1.0 pass is
+committed under [`evidence/w2.1-android-pass/`](./evidence/w2.1-android-pass/).
 
 ---
 
