@@ -33,7 +33,7 @@ public struct DestructiveButton<T: ImageIconProtocol>: ButtonConfigurable, View 
 	public var throttleDuration: Double = 0.5
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme  // skipstone: internal (see PORTABILITY.md)
 
 	/// Creates a destructive button
 	/// - Parameters:

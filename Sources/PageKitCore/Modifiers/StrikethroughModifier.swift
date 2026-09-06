@@ -9,7 +9,7 @@ import SwiftUI
 // MARK: - StrikethroughModifier
 
 @available(iOS, deprecated: 16, message: "Use native strikethrough modifier.")
-private struct StrikethroughModifier: ViewModifier {
+struct StrikethroughModifier: ViewModifier {  // skipstone: internal (see PORTABILITY.md)
 	var color: Color
 
 	init(color: Color) {

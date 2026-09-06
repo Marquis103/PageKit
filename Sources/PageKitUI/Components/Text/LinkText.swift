@@ -25,7 +25,7 @@ public struct LinkText: TextConfigurable, View {  // direct View listing — ind
 	public var textColor: Color?
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme  // skipstone: internal (see PORTABILITY.md)
 
 	/// Creates a Link text component
 	/// - Parameter text: The text content to display

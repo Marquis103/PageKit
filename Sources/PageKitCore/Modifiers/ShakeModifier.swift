@@ -8,7 +8,7 @@ import SwiftUI
 
 // MARK: - ShakeModifier
 
-private struct ShakeModifier: Animatable, ViewModifier {
+struct ShakeModifier: Animatable, ViewModifier {  // skipstone: internal (see PORTABILITY.md)
 	@Binding
 	var shakeTrigger: Bool
 
@@ -17,7 +17,7 @@ private struct ShakeModifier: Animatable, ViewModifier {
 	let maxOffset: CGFloat
 
 	@State
-	private var offset: CGFloat = 0
+	var offset: CGFloat = 0  // skipstone: internal (see PORTABILITY.md)
 
 	func body(content: Content) -> some View {
 		content

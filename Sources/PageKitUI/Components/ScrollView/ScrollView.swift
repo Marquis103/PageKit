@@ -44,7 +44,7 @@ public struct ScrollView<Content: View>: View {
 	private let content: Content
 
 	@Environment(\.interaction)
-	private var interaction: Interaction
+	var interaction: Interaction  // skipstone: internal (see PORTABILITY.md)
 
 	/// Creates a ScrollView with an optional refresh closure
 	/// - Parameters:
@@ -100,7 +100,7 @@ public struct ScrollView<Content: View>: View {
 // MARK: - RefreshableModifier
 
 /// Internal modifier that conditionally applies .refreshable
-private struct RefreshableModifier: ViewModifier {
+struct RefreshableModifier: ViewModifier {  // skipstone: internal (see PORTABILITY.md)
 	let isEnabled: Bool
 	let onRefresh: (() async -> Void)?
 

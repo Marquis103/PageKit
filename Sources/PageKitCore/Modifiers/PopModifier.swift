@@ -8,7 +8,7 @@ import SwiftUI
 
 // MARK: - PopModifier
 
-private struct PopModifier: Animatable, ViewModifier {
+struct PopModifier: Animatable, ViewModifier {  // skipstone: internal (see PORTABILITY.md)
 	@Binding
 	var popTrigger: Bool
 
@@ -16,7 +16,7 @@ private struct PopModifier: Animatable, ViewModifier {
 	let maxScale: CGFloat
 
 	@State
-	private var scale: CGFloat = 1
+	var scale: CGFloat = 1  // skipstone: internal (see PORTABILITY.md)
 
 	func body(content: Content) -> some View {
 		content

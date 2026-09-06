@@ -69,10 +69,10 @@ public struct BaseButton<T: ImageIconProtocol>: View {
 	public let onClick: () -> Void
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme  // skipstone: internal (see PORTABILITY.md)
 
 	@Environment(\.isEnabled)
-	private var isEnabled
+	var isEnabled  // skipstone: internal (see PORTABILITY.md)
 
 	#if os(Android)
 	// Plain storage — @StateObject does not exist under Skip Fuse (E4-F3) and

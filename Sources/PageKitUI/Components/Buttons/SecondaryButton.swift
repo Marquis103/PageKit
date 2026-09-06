@@ -31,7 +31,7 @@ public struct SecondaryButton<T: ImageIconProtocol>: ButtonConfigurable, View { 
 	public var throttleDuration: Double = 0.5
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme  // skipstone: internal (see PORTABILITY.md)
 
 	/// Creates a secondary button
 	/// - Parameters:

@@ -25,7 +25,7 @@ public struct H1Text: TextConfigurable, View {  // direct View listing — indir
 	public var textColor: Color?
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme  // skipstone: internal (see PORTABILITY.md)
 
 	/// Creates an H1 text component
 	/// - Parameter text: The text content to display

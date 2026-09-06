@@ -25,7 +25,7 @@ public struct TitleText: TextConfigurable, View {  // direct View listing — in
 	public var textColor: Color?
 
 	@Environment(\.theme)
-	private var theme: AnyTheme
+	var theme: AnyTheme  // skipstone: internal (see PORTABILITY.md)
 
 	/// Creates a Title text component
 	/// - Parameter text: The text content to display
