@@ -942,6 +942,44 @@ MyRootView()
 
 ---
 
+## Text size (Dynamic Type)
+
+By default every page renders at the system's default text size (`ContentSizeCategory.large`),
+whatever the user chose in Settings: `PageContentWrapper`, which wraps each page presented by
+`PageHostController`, `SheetController` and `ModalController`, pins it. To let pages follow the
+user's text size, opt out once at launch, before the first page is presented:
+
+```swift
+// App init, or application(_:didFinishLaunchingWithOptions:)
+PageHosting.dynamicType = .system
+```
+
+| `PageHosting.dynamicType` | Pages render at |
+|---|---|
+| `.pinned` (default) | `.large`, whatever the system setting |
+| `.system` | the user's text size, up to the largest accessibility size (AX5) |
+
+A host reads the setting when it builds its page, so a page already on screen keeps the value
+it was built with. With `.system`, layouts must hold at AX5: stack rows vertically at
+accessibility sizes (`dynamicTypeSize.isAccessibilitySize`) or let `ViewThatFits` choose.
+
+To snapshot a page the way the app's hosts present it, wrap it with the setting explicitly:
+
+```swift
+let view = PageContentWrapper(dynamicType: .system) { MyPageView(viewState: state, handler: handler) }
+    .environment(\.dynamicTypeSize, .accessibility5)
+```
+
+---
+
+## 2.2.0 — text size is a choice
+
+`PageHosting.dynamicType` (see [Text size](#text-size-dynamic-type)) and
+`PageContentWrapper(dynamicType:content:)` are new. **Nothing changes for existing consumers**:
+the default is `.pinned`, the behavior every release before 2.2.0 had.
+
+---
+
 ## 2.1.0 — the Android pass
 
 `PageKitCore`, `PageKitTheming` and `PageKitUI` compile and compose for Android under
